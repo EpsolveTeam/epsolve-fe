@@ -61,12 +61,14 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .data-table thead tr {
@@ -235,15 +237,13 @@
 }
 
 .filter-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 6px 0;
+  padding: 6px 0 12px 0;
   min-width: 200px;
-  z-index: 100;
+  min-height: 80px;
+  z-index: 9999;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 

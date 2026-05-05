@@ -1,69 +1,93 @@
 import { useState } from 'react'
-import { X, Download } from 'lucide-react'
+import { X, Download, Loader2 } from 'lucide-react'
+import { apiFetch } from '../api'
 import './ShareModal.css'
 
 export default function ShareModal({ onClose }) {
-  const [email, setEmail] = useState('')
-  const [period, setPeriod] = useState('1minggu')
+  const [downloading, setDownloading] = useState(false)
+  const [distributing, setDistributing] = useState(false)
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const res = await apiFetch('/analytics/export-excel')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.detail || 'Gagal mengunduh laporan')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'report_analytics_epsolve.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      alert('Gagal mengunduh laporan')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleDistribute = async () => {
+    setDistributing(true)
+    try {
+      const res = await apiFetch('/analytics/distribute-report', { method: 'POST' })
+      if (res.ok) {
+        alert('Laporan sedang dikirim ke admin.')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.detail || 'Gagal mengirim laporan')
+      }
+    } catch (e) {
+      alert('Gagal mengirim laporan')
+    } finally {
+      setDistributing(false)
+    }
+  }
 
   return (
     <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal share-modal">
         <button className="modal-close" onClick={onClose}><X size={14} /></button>
 
-        <h2>Bagikan Laporan Analisis Periode Ini</h2>
-        <p className="share-sub">Analisis selama periode 3 bulan: 1 Februari - 30 April 2026</p>
+        <h2>Bagikan Laporan Analisis</h2>
+        <p className="share-sub">Unduh laporan atau kirim secara otomatis ke seluruh Admin</p>
 
         <div className="ticket-modal-divider" />
 
         <div className="share-section">
-          <h4>Download PDF Laporan</h4>
-          <div className="download-row">
-            <Download size={18} style={{color: 'var(--text-secondary)'}} />
+          <h4>Download Excel Laporan</h4>
+          <div className="download-row" onClick={handleDownload} style={{ cursor: downloading ? 'wait' : 'pointer' }}>
+            {downloading ? (
+              <Loader2 size={18} style={{color: 'var(--text-secondary)', animation: 'spin 1s linear infinite'}} />
+            ) : (
+              <Download size={18} style={{color: 'var(--text-secondary)'}} />
+            )}
             <div>
-              <div className="file-name-txt">Laporan_01022026-30042026.pdf</div>
-              <div className="file-size">10MB</div>
+              <div className="file-name-txt">
+                {downloading ? 'Mengunduh...' : 'report_analytics_epsolve.xlsx'}
+              </div>
+              <div className="file-size">Klik untuk mengunduh</div>
             </div>
           </div>
         </div>
 
         <div className="auto-section">
           <div className="auto-header">
-            <h4>Mode Otomatis Aktif</h4>
-            <p className="auto-sub">Laporan periode 1 minggu: 23 April - 30 April 2026 telah terkirim</p>
-          </div>
-
-          <div className="share-field">
-            <label>Email Penerima Laporan</label>
-            <input
-              type="email"
-              placeholder="abc@gmail.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="share-field">
-            <label>Periode Pengiriman Otomatis</label>
-            <div className="radio-group">
-              {[['3bulan','3 bulan'],['1bulan','1 bulan'],['1minggu','1 minggu']].map(([v,l]) => (
-                <label key={v} className="radio-item">
-                  <input
-                    type="radio"
-                    name="period"
-                    value={v}
-                    checked={period === v}
-                    onChange={() => setPeriod(v)}
-                  />
-                  <span className={`radio-circle ${period===v?'checked':''}`} />
-                  {l}
-                </label>
-              ))}
-            </div>
+            <h4>Distribusi Laporan</h4>
+            <p className="auto-sub">Kirim laporan analitik terbaru ke seluruh Admin</p>
           </div>
 
           <div className="modal-actions">
-            <button className="btn-primary">Simpan Perubahan</button>
+            <button
+              className="btn-primary"
+              onClick={handleDistribute}
+              disabled={distributing}
+            >
+              {distributing ? 'Mengirim...' : 'Kirim Laporan'}
+            </button>
           </div>
         </div>
       </div>

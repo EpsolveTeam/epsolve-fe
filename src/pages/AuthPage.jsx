@@ -1,36 +1,88 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import './AuthPage.css'
+import { apiFetch } from '../api'
 
 export default function AuthPage({ onLogin }) {
   const [mode, setMode] = useState('login') // 'login' | 'register'
   const [showPass, setShowPass] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Dummy credentials
-  const ADMIN = { email: 'admin@epsolve.com', password: 'admin123', role: 'admin' }
-  const USER  = { email: 'user@epsolve.com',  password: 'user123',  role: 'user'  }
+  const handleSubmit = async () => {
+    setError('')
 
-  const handleSubmit = () => {
     if (mode === 'login') {
-      if (form.email === ADMIN.email && form.password === ADMIN.password) {
-        onLogin({ name: 'Admin', email: ADMIN.email, role: 'admin' })
-      } else if (form.email === USER.email && form.password === USER.password) {
-        onLogin({ name: 'Shadcn', email: USER.email, role: 'user' })
-      } else {
-        alert('Email atau password salah.\n\nDummy credentials:\nAdmin → admin@epsolve.com / admin123\nUser  → user@epsolve.com / user123')
-      }
-    } else {
-      // Register → langsung masuk sebagai user
-      if (!form.name || !form.email || !form.password) {
-        alert('Mohon isi semua field.')
+      if (!form.email || !form.password) {
+        setError('Mohon isi email dan password.')
         return
       }
-      onLogin({ name: form.name, email: form.email, role: 'user' })
+      setLoading(true)
+      try {
+        const res = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: form.email, password: form.password }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          setError(typeof err.detail === 'string' ? err.detail : 'Email atau password salah.')
+          return
+        }
+        const { access_token, refresh_token } = await res.json()
+        localStorage.setItem('access_token', access_token)
+        localStorage.setItem('refresh_token', refresh_token)
+
+        const meRes = await apiFetch('/auth/me')
+        const me = await meRes.json()
+        onLogin({ name: me.full_name, email: me.email, role: me.role })
+      } catch {
+        setError('Tidak dapat terhubung ke server.')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      if (!form.name || !form.email || !form.password) {
+        setError('Mohon isi semua field.')
+        return
+      }
+      setLoading(true)
+      try {
+        const res = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: form.email,
+            full_name: form.name,
+            password: form.password,
+            role: 'karyawan',
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          setError(typeof err.detail === 'string' ? err.detail : 'Registrasi gagal.')
+          return
+        }
+        const { access_token, refresh_token } = await res.json()
+        localStorage.setItem('access_token', access_token)
+        localStorage.setItem('refresh_token', refresh_token)
+
+        const meRes = await apiFetch('/auth/me')
+        const me = await meRes.json()
+        onLogin({ name: me.full_name, email: me.email, role: me.role })
+      } catch {
+        setError('Tidak dapat terhubung ke server.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const switchMode = (next) => {
+    setMode(next)
+    setError('')
+  }
 
   return (
     <div className="auth-bg">
@@ -78,6 +130,8 @@ export default function AuthPage({ onLogin }) {
             </div>
           </div>
 
+          {error && <p className="auth-error">{error}</p>}
+
           {mode === 'login' && (
             <div className="forgot-row">
               <button className="link-btn" onClick={() => alert('Fitur lupa password belum tersedia.')}>
@@ -86,15 +140,15 @@ export default function AuthPage({ onLogin }) {
             </div>
           )}
 
-          <button className="auth-submit" onClick={handleSubmit}>
-            {mode === 'login' ? 'Masuk Sekarang' : 'Daftar Sekarang'}
+          <button className="auth-submit" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Memproses...' : mode === 'login' ? 'Masuk Sekarang' : 'Daftar Sekarang'}
           </button>
 
           <div className="auth-switch">
             {mode === 'login' ? (
-              <>Belum punya akun? <button className="link-btn" onClick={() => setMode('register')}>Daftar</button></>
+              <>Belum punya akun? <button className="link-btn" onClick={() => switchMode('register')}>Daftar</button></>
             ) : (
-              <>Sudah punya akun? <button className="link-btn" onClick={() => setMode('login')}>Masuk</button></>
+              <>Sudah punya akun? <button className="link-btn" onClick={() => switchMode('login')}>Masuk</button></>
             )}
           </div>
         </div>

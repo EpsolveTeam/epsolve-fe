@@ -129,6 +129,22 @@
 }
 .auth-submit:active { transform: translateY(0); }
 
+.auth-error {
+  font-size: 13px;
+  color: var(--error);
+  background: var(--error-dim);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .auth-switch {
   text-align: center;
   margin-top: 18px;

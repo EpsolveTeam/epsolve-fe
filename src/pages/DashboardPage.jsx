@@ -3,43 +3,39 @@ import { ChevronDown, ArrowUpRight, Check, MessageSquare, RotateCcw } from 'luci
 import TicketDetailModal from '../components/TicketDetailModal'
 import TicketFormModal from '../components/TicketFormModal'
 import './DashboardPage.css'
-
-const categories = [
-  { label: 'General', count: 10 },
-  { label: 'Troubleshooting Perangkat', count: 5 },
-  { label: 'Service Repair', count: 12 },
-  { label: 'Sistem & IT Support', count: 11 },
-  { label: 'Maintenance & Setup', count: 4 },
-  { label: 'Produksi & Operasional', count: 8 },
-  { label: 'Kebijakan Internal', count: 3 },
-  { label: 'Penggunaan Tools', count: 4 },
-]
-
-const tickets = [
-  { id: 1, type: 'Sistem & IT Support', question: 'Printer di ruangan saya tidak bisa digunakan melalui jaringan. Status di komputer "offline", padahal printer menyala. Sudah coba restart tapi masih tidak bisa. Mohon bantuannya.', division: 'Operations', email: 'email@gmail.com', name: 'namadiasiapa', status: 'respon', answered: false },
-  { id: 2, type: 'Troubleshooting Perangkat', question: 'Printer tidak merespon saat diberi perintah cetak, apa penyebabnya?', division: 'R&D', email: 'email@gmail.com', name: 'namadiasiapa', status: 'respon', answered: false },
-  { id: 3, type: 'Troubleshooting Perangkat', question: 'Kenapa hasil print bergaris atau buram?', division: 'Marketing', email: 'email@gmail.com', name: 'namadiasiapa', status: 'respon', answered: false },
-  { id: 4, type: 'Service Repair', question: 'Bagaimana prosedur pengajuan perbaikan perangkat?', division: 'Finance', email: 'email@gmail.com', name: 'namadiasiapa', status: 'respon', answered: false },
-  { id: 5, type: 'Maintenance & Setup', question: 'Bagaimana cara instalasi projector baru di jaringan kantor?', division: 'Customer Service', email: 'email@gmail.com', name: 'namadiasiapa', status: 'respon', answered: false },
-  { id: 6, type: 'Maintenance & Setup', question: 'Bagaimana cara update firmware perangkat?', division: 'Sales', email: 'email@gmail.com', name: 'namadiasiapa', status: 'terjawab', answered: true },
-  { id: 7, type: 'Troubleshooting Perangkat', question: 'Scanner tidak terdeteksi di komputer, bagaimana cara mengatasinya?', division: 'Human Resources', email: 'email@gmail.com', name: 'namadiasiapa', status: 'terjawab', answered: true },
-  { id: 8, type: 'Produksi & Operasional', question: 'Apakah ada SOP terbaru untuk operasional mesin?', division: 'Product Management', email: 'email@gmail.com', name: 'namadiasiapa', status: 'terjawab', answered: true },
-  { id: 9, type: 'Produksi & Operasional', question: 'Bagaimana cara melaporkan kendala di lini produksi?', division: 'IT Department', email: 'email@gmail.com', name: 'namadiasiapa', status: 'terjawab', answered: true },
-  { id: 10, type: 'General', question: 'Di mana saya bisa melihat panduan penggunaan sistem?', division: 'Legal', email: 'email@gmail.com', name: 'namadiasiapa', status: 'terjawab', answered: true },
-]
+import { apiFetch } from '../api'
 
 const DIVISIONS = ['Operations', 'R&D', 'Marketing', 'Finance', 'Customer Service']
-const QUESTION_TYPES = ['General', 'Sistem & IT Support', 'Troubleshooting Perangkat', 'Service Repair', 'Maintenance & Setup', 'Produksi & Operasional', 'Kebijakan Internal', 'Penggunaan Tools']
+const QUESTION_TYPES = [
+  'General', 'Sistem & IT Support', 'Troubleshooting Perangkat',
+  'Service Repair', 'Maintenance & Setup', 'Produksi & Operasi',
+  'Kebijakan Internal', 'Penggunaan Tools',
+]
 
 function FilterDropdown({ label, options, selected, onChange, type = 'checkbox' }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef(null)
+  const dropRef = useRef(null)
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const handler = (e) => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        dropRef.current && !dropRef.current.contains(e.target)
+      ) setOpen(false)
+    }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  const handleOpen = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setDropPos({ top: rect.bottom + 6, left: rect.left })
+    }
+    setOpen(o => !o)
+  }
 
   const toggle = (val) => {
     if (type === 'radio') {
@@ -50,13 +46,21 @@ function FilterDropdown({ label, options, selected, onChange, type = 'checkbox' 
   }
 
   return (
-    <div className="th-filter-wrap" ref={ref}>
-      <span className={`th-filter-trigger ${open || selected.length ? 'active' : ''}`} onClick={() => setOpen(o => !o)}>
+    <div className="th-filter-wrap">
+      <span
+        ref={triggerRef}
+        className={`th-filter-trigger ${open || selected.length ? 'active' : ''}`}
+        onClick={handleOpen}
+      >
         {label} <ChevronDown size={12} className={open ? 'rotated' : ''} />
         {selected.length > 0 && <span className="filter-dot" />}
       </span>
       {open && (
-        <div className="filter-dropdown">
+        <div
+          ref={dropRef}
+          className="filter-dropdown"
+          style={{ position: 'fixed', top: dropPos.top, left: dropPos.left }}
+        >
           <div className="filter-reset" onClick={() => onChange([])}>
             <RotateCcw size={11} /> Reset
           </div>
@@ -76,7 +80,9 @@ function FilterDropdown({ label, options, selected, onChange, type = 'checkbox' 
   )
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ user }) {
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
@@ -84,85 +90,124 @@ export default function DashboardPage() {
   const [filterStatus, setFilterStatus] = useState([])
   const [filterTiket, setFilterTiket] = useState([])
   const rowsPerPage = 10
-  const totalPages = Math.ceil(68 / rowsPerPage)
 
+  const fetchTickets = () => {
+    setLoading(true)
+    apiFetch('/tickets/')
+      .then(r => r.json())
+      .then(data => setTickets(Array.isArray(data) ? data : []))
+      .catch(() => setTickets([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { fetchTickets() }, [])
+
+  // 3.3 — hitung jumlah per kategori dari data real
+  const categoryCounts = tickets.reduce((acc, t) => {
+    acc[t.category] = (acc[t.category] || 0) + 1
+    return acc
+  }, {})
+
+  // filter pakai field name dari API
   const filteredTickets = tickets.filter(t => {
     if (filterDivisi.length && !filterDivisi.includes(t.division)) return false
     if (filterStatus.length) {
-      const isTerjawab = filterStatus.includes('Terjawab') && t.answered
-      const isBelum = filterStatus.includes('Belum Terjawab') && !t.answered
+      const isAnswered = t.status !== 'open'
+      const isTerjawab = filterStatus.includes('Terjawab') && isAnswered
+      const isBelum = filterStatus.includes('Belum Terjawab') && !isAnswered
       if (!isTerjawab && !isBelum) return false
     }
-    if (filterTiket.length && !filterTiket.includes(t.type)) return false
+    if (filterTiket.length && !filterTiket.includes(t.category)) return false
     return true
   })
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / rowsPerPage))
+  const pagedTickets = filteredTickets.slice((page - 1) * rowsPerPage, page * rowsPerPage)
+
+  const changeFilter = (setter) => (val) => { setter(val); setPage(1) }
 
   return (
     <div className="page-content">
       <h1 className="page-title">Dashboard Tiket</h1>
 
+      {/* 3.3 — total dari data real */}
       <div className="total-card">
         <span>Total Pertanyaan</span>
-        <span className="total-num">57</span>
+        <span className="total-num">{tickets.length}</span>
       </div>
 
+      {/* 3.3 — kategori dari data real */}
       <div className="categories-grid">
-        {categories.map(c => (
-          <div key={c.label} className="category-row">
-            <span>{c.label}</span>
-            <span className="category-count">{c.count}</span>
+        {QUESTION_TYPES.map(label => (
+          <div key={label} className="category-row">
+            <span>{label}</span>
+            <span className="category-count">{categoryCounts[label] || 0}</span>
           </div>
         ))}
       </div>
 
       <div className="table-wrap">
-        <table className="data-table">
+        {loading ? (
+          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            Memuat tiket...
+          </div>
+        ) : (
+          <table className="data-table">
             <thead>
               <tr>
                 <th>
-                  <FilterDropdown label="Tiket" options={QUESTION_TYPES} selected={filterTiket} onChange={setFilterTiket} />
+                  <FilterDropdown label="Tiket" options={QUESTION_TYPES} selected={filterTiket} onChange={changeFilter(setFilterTiket)} />
                 </th>
                 <th>
-                  <FilterDropdown label="Divisi" options={DIVISIONS} selected={filterDivisi} onChange={setFilterDivisi} />
+                  <FilterDropdown label="Divisi" options={DIVISIONS} selected={filterDivisi} onChange={changeFilter(setFilterDivisi)} />
                 </th>
                 <th>Email</th>
                 <th>Nama</th>
                 <th>
-                  <FilterDropdown label="Status" options={['Terjawab', 'Belum Terjawab']} selected={filterStatus} onChange={setFilterStatus} />
+                  <FilterDropdown label="Status" options={['Terjawab', 'Belum Terjawab']} selected={filterStatus} onChange={changeFilter(setFilterStatus)} />
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.map(t => (
-              <tr key={t.id}>
-                <td>
-                  <div className="ticket-cell">
-                    <span className="ticket-type">{t.type}</span>
-                    <span className="ticket-q">{t.question}</span>
-                  </div>
-                </td>
-                <td><span className="division-badge">{t.division}</span></td>
-                <td className="muted">{t.email}</td>
-                <td className="muted">{t.name}</td>
-                <td>
-                  <div className="status-cell">
-                    {t.answered ? (
-                      <span className="status-badge answered"><Check size={12} /> Terjawab</span>
-                    ) : (
-                      <button className="status-badge respon" onClick={() => setSelectedTicket(t)}>
-                        <MessageSquare size={12} /> Respon
+              {pagedTickets.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    Tidak ada tiket.
+                  </td>
+                </tr>
+              ) : pagedTickets.map(t => (
+                <tr key={t.id}>
+                  <td>
+                    <div className="ticket-cell">
+                      <span className="ticket-type">{t.category}</span>
+                      <span className="ticket-q">{t.description}</span>
+                    </div>
+                  </td>
+                  <td><span className="division-badge">{t.division}</span></td>
+                  <td className="muted">{t.user_email}</td>
+                  <td className="muted">{t.name}</td>
+                  <td>
+                    <div className="status-cell">
+                      {t.status !== 'open' ? (
+                        <span className="status-badge answered"><Check size={12} /> Terjawab</span>
+                      ) : (
+                        <button className="status-badge respon" onClick={() => setSelectedTicket(t)}>
+                          <MessageSquare size={12} /> Respon
+                        </button>
+                      )}
+                      <button className="icon-btn" onClick={() => setSelectedTicket(t)}>
+                        <ArrowUpRight size={13} />
                       </button>
-                    )}
-                    <button className="icon-btn" onClick={() => setSelectedTicket(t)}><ArrowUpRight size={13} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         <div className="table-footer">
-          <span className="muted">0 of 68 row(s) selected.</span>
+          <span className="muted">{filteredTickets.length} tiket ditemukan.</span>
           <div className="pagination">
             <span className="muted">Rows per page</span>
             <select className="rows-select">
@@ -171,8 +216,8 @@ export default function DashboardPage() {
             <span className="muted">Page {page} of {totalPages}</span>
             <div className="page-btns">
               <button onClick={() => setPage(1)}>«</button>
-              <button onClick={() => setPage(p => Math.max(1,p-1))}>‹</button>
-              <button onClick={() => setPage(p => Math.min(totalPages,p+1))}>›</button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))}>›</button>
               <button onClick={() => setPage(totalPages)}>»</button>
             </div>
           </div>
@@ -180,9 +225,16 @@ export default function DashboardPage() {
       </div>
 
       {selectedTicket && (
-        <TicketDetailModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+        <TicketDetailModal
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          onRespond={() => {
+            setSelectedTicket(null)
+            fetchTickets()
+          }}
+        />
       )}
-      {showForm && <TicketFormModal onClose={() => setShowForm(false)} />}
+      {showForm && <TicketFormModal onClose={() => setShowForm(false)} user={user} />}
     </div>
   )
 }
