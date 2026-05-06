@@ -20,3 +20,48 @@
   line-height: 1.5;
   max-width: 680px;
 }
+
+.answer-edit {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--bg-elevated);
+  color: white;
+}
+
+.btn-danger {
+  background: #FF6467;
+}
+
+.btn-danger:hover {
+  background: #FF6467; /* or darker shade */
+}
+
+.btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover);
+}
+
+.btn-save {
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-save:hover {
+  background: var(--accent-hover);
+}

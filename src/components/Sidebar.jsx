@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LayoutDashboard, BookOpen, FileText, MessageSquare, ChevronDown, ChevronUp, Plus, History, LogOut } from 'lucide-react'
+import { apiFetch } from '../api'
 import './Sidebar.css'
 
-const history = ['Cara Download Driver P...', 'Proyektor Rusak', 'Cara Memasukkan Tinta']
-
-export default function Sidebar({ page, setPage, user, onLogout }) {
+export default function Sidebar({ page, setPage, user, onLogout, setChatSession, chatSession }) {
+  const [history, setHistory] = useState([])
   const [histOpen, setHistOpen] = useState(true)
+
+  useEffect(() => {
+    if (!user || user.role === 'admin') return
+    apiFetch('/chat/sessions')
+      .then(r => r.json())
+      .then(sessions => setHistory(sessions.map(s => ({ id: s.session_id, title: s.title }))))
+      .catch(() => {})
+  }, [user])
 
   const adminPages = [
     { id: 'dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard Tiket' },
@@ -14,7 +22,7 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
   ]
 
   const isChatPage = page === 'chat'
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role?.toLowerCase() === 'admin'
 
   return (
     <aside className="sidebar">
@@ -31,15 +39,7 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
 
       <nav className="sidebar-nav">
         {isAdmin ? (
-          /* Admin: show chat + admin pages */
           <>
-            <button
-              className={`nav-item ${page === 'chat' ? 'active' : ''}`}
-              onClick={() => setPage('chat')}
-            >
-              <MessageSquare size={15} /> Chatbot
-            </button>
-            <div className="nav-divider" />
             {adminPages.map(p => (
               <button
                 key={p.id}
@@ -51,22 +51,19 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
             ))}
           </>
         ) : (
-          /* User: only chat with history */
           <>
-            <button className="nav-item" onClick={() => setPage('chat')}>
+            <button className={`nav-item ${page === 'chat' && !chatSession ? 'active' : ''}`} onClick={() => { setPage('chat'); setChatSession(null); }}>
               <Plus size={15} /> Obrolan Baru
             </button>
             <button className="nav-group-btn" onClick={() => setHistOpen(v => !v)}>
               <span className="nav-group-left"><History size={15} /> Riwayat</span>
               {histOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
-            {histOpen && (
-              <div className="nav-history">
-                {history.map(h => (
-                  <button key={h} className="nav-history-item">{h}</button>
-                ))}
-              </div>
-            )}
+            <div className={`nav-history ${histOpen ? 'open' : ''}`}>
+              {history.map(h => (
+                <button key={h.id} className={`nav-history-item ${page === 'chat' && chatSession?.session_id === h.id ? 'active' : ''}`} onClick={() => { setPage('chat'); setChatSession({ session_id: h.id, title: h.title }); }}>{h.title}</button>
+              ))}
+            </div>
           </>
         )}
       </nav>

@@ -25,7 +25,6 @@
   font-weight: 500;
 }
 
-/* Shared across pages */
 .ticket-modal-divider {
   height: 1px;
   background: var(--border);
@@ -115,7 +114,13 @@
   border-radius: 99px;
   font-size: 12px;
   white-space: nowrap;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  min-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .icon-btn {
@@ -139,9 +144,12 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  table-layout: fixed;
 }
 
-.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table thead tr { border-bottom: 1px solid var(--border); border-radius: 0; }
 
 .data-table th {
   padding: 12px 16px;
@@ -150,6 +158,12 @@
   font-weight: 500;
   color: var(--text-muted);
 }
+
+.data-table th:nth-child(1) { width: 250px; }
+.data-table th:nth-child(2) { width: 160px; }
+.data-table th:nth-child(3) { width: 150px; }
+.data-table th:nth-child(4) { width: 120px; }
+.data-table th:nth-child(5) { width: 150px; }
 
 .data-table tbody tr {
   border-bottom: 1px solid var(--border-subtle);

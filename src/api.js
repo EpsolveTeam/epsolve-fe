@@ -15,7 +15,7 @@ function getToken() {
 
 export async function apiFetch(path, options = {}) {
   const headers = { ...options.headers }
-  if (options.body && !headers['Content-Type']) {
+  if (options.body && !headers['Content-Type'] && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
   }
   const token = getToken()
@@ -54,4 +54,53 @@ async function tryRefresh() {
   localStorage.setItem('access_token', data.access_token)
   localStorage.setItem('refresh_token', data.refresh_token)
   return true
+}
+
+// Knowledge Base API functions
+export async function getKnowledgeBase(category = null, division = null) {
+  const params = new URLSearchParams()
+  if (category) params.append('category', category)
+  if (division) params.append('division', division)
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const res = await apiFetch(`/knowledge/${query}`)
+  if (!res.ok) throw new Error('Failed to fetch knowledge base')
+  return res.json()
+}
+
+export async function getKnowledgeBaseDetail(kbId) {
+  const res = await apiFetch(`/knowledge/${kbId}`)
+  if (!res.ok) throw new Error('Failed to fetch knowledge base detail')
+  return res.json()
+}
+
+export async function createKnowledgeBase(data) {
+  const res = await apiFetch('/knowledge/', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error('Failed to create knowledge base')
+  return res.json()
+}
+
+export async function updateKnowledgeBase(kbId, data) {
+  const res = await apiFetch(`/knowledge/${kbId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error('Failed to update knowledge base')
+  return res.json()
+}
+
+export async function deleteKnowledgeBase(kbId) {
+  const res = await apiFetch(`/knowledge/${kbId}`, {
+    method: 'DELETE'
+  })
+  if (!res.ok) throw new Error('Failed to delete knowledge base')
+  return res.json()
+}
+
+export async function getOptions() {
+  const res = await apiFetch('/options/')
+  if (!res.ok) throw new Error('Failed to fetch options')
+  return res.json()
 }

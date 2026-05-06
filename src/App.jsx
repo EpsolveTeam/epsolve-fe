@@ -11,6 +11,7 @@ import ReportPage from './pages/ReportPage'
 export default function App() {
   const [user, setUser] = useState(null)
   const [page, setPage] = useState('chat')
+  const [chatSession, setChatSession] = useState(null) // null for new, {session_id, title} for history
   const [initializing, setInitializing] = useState(true)
 
   // Auto-login: cek token tersimpan saat pertama kali render
@@ -28,14 +29,18 @@ export default function App() {
 
     apiFetch('/auth/me')
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(me => setUser({ name: me.full_name, email: me.email, role: me.role }))
+      .then(me => {
+        const userData = { name: me.full_name, email: me.email, role: me.role }
+        setUser(userData)
+        setPage(userData.role?.toLowerCase() === 'admin' ? 'dashboard' : 'chat')
+      })
       .catch(() => localStorage.clear())
       .finally(() => setInitializing(false))
   }, [])
 
   const handleLogin = (userData) => {
     setUser(userData)
-    setPage('chat')
+    setPage(userData.role?.toLowerCase() === 'admin' ? 'dashboard' : 'chat')
   }
 
   const handleLogout = async () => {
@@ -54,19 +59,19 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} />
+      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} />
       <div className="app-main">
         <div className="topbar">
           <h1>Epsolve Smart Helpdesk</h1>
-          {user.role === 'admin' && (
-            <span className="admin-badge">Admin</span>
-          )}
+           {user.role?.toLowerCase() === 'admin' && (
+             <span className="admin-badge">Admin</span>
+           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {page === 'chat' && <ChatPage user={user} />}
-          {page === 'dashboard' && user.role === 'admin' && <DashboardPage user={user} />}
-          {page === 'kb' && user.role === 'admin' && <KnowledgeBasePage />}
-          {page === 'report' && user.role === 'admin' && <ReportPage />}
+          {page === 'chat' && <ChatPage user={user} session={chatSession} />}
+          {page === 'dashboard' && user.role?.toLowerCase() === 'admin' && <DashboardPage user={user} />}
+          {page === 'kb' && user.role?.toLowerCase() === 'admin' && <KnowledgeBasePage />}
+          {page === 'report' && user.role?.toLowerCase() === 'admin' && <ReportPage />}
         </div>
       </div>
     </div>

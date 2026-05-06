@@ -1,15 +1,23 @@
-import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, ArrowUpRight, RotateCcw } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { ChevronDown, ArrowUpRight, RotateCcw, Loader2 } from 'lucide-react'
 import KBDetailModal from '../components/KBDetailModal'
+import { getKnowledgeBase, createKnowledgeBase, deleteKnowledgeBase, getOptions } from '../api'
 import './KnowledgeBasePage.css'
 
-const DIVISI_OPTIONS = ['Operations', 'R&D', 'Marketing', 'Finance', 'Customer Service']
-const PRODUK_OPTIONS = ['Pilih jenis produk', 'Printer', 'Scanner', 'Laptop', 'Komputer Desktop', 'Monitor', 'Proyektor', 'Jaringan & WiFi', 'Server', 'Perangkat Lainnya']
+const PLACEHOLDER_JENIS = 'Pilih jenis pertanyaan'
+const PLACEHOLDER_DIVISI = 'Pilih divisi'
 
-const JENIS_OPTIONS = ['Pilih jenis pertanyaan', 'General', 'Sistem & IT Support', 'Troubleshooting Perangkat', 'Service Repair', 'Maintenance & Setup', 'Produksi & Operasional', 'Kebijakan Internal', 'Penggunaan Tools']
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  const day = date.getDate()
+  const month = date.toLocaleString('id-ID', { month: 'short' })
+  const year = date.getFullYear().toString().slice(-2)
+  return `${day} ${month} ${year}`
+}
 
 function SelectDropdown({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState({})
   const ref = useRef(null)
 
   useEffect(() => {
@@ -18,17 +26,18 @@ function SelectDropdown({ label, options, selected, onChange }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  let dropdownStyle = {}
-  if (open && ref.current) {
-    const rect = ref.current.getBoundingClientRect()
-    dropdownStyle = {
-      position: 'fixed',
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      width: rect.width,
-      margin: 0
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        margin: 0
+      })
     }
-  }
+  }, [open])
 
   return (
     <div ref={ref} style={{position:'relative',display:'block'}}>
@@ -49,18 +58,17 @@ function SelectDropdown({ label, options, selected, onChange }) {
   )
 }
 
-function JenisProdukDropdown() {
-  const [selected, setSelected] = useState('')
-  return <SelectDropdown label="Pilih jenis produk" options={PRODUK_OPTIONS} selected={selected} onChange={setSelected} />
+function DivisiDropdown({ selected, onChange, options }) {
+  return <SelectDropdown label={PLACEHOLDER_DIVISI} options={options} selected={selected} onChange={onChange} />
 }
 
-function JenisPertanyaanDropdown() {
-  const [selected, setSelected] = useState('')
-  return <SelectDropdown label="Pilih jenis pertanyaan" options={JENIS_OPTIONS} selected={selected} onChange={setSelected} />
+function JenisPertanyaanDropdown({ selected, onChange, options }) {
+  return <SelectDropdown label={PLACEHOLDER_JENIS} options={options} selected={selected} onChange={onChange} />
 }
 
 function FilterDropdown({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState({})
   const ref = useRef(null)
 
   useEffect(() => {
@@ -69,16 +77,17 @@ function FilterDropdown({ label, options, selected, onChange }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  let dropdownStyle = {}
-  if (open && ref.current) {
-    const rect = ref.current.getBoundingClientRect()
-    dropdownStyle = {
-      position: 'fixed',
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      margin: 0
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        margin: 0
+      })
     }
-  }
+  }, [open])
 
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
@@ -111,6 +120,7 @@ const RIWAYAT_OPTIONS = ['Terbaru', 'Terlama', 'Baru Diperbarui']
 
 function RiwayatDropdown({ selected, onChange }) {
   const [open, setOpen] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState({})
   const ref = useRef(null)
 
   useEffect(() => {
@@ -119,17 +129,18 @@ function RiwayatDropdown({ selected, onChange }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  let dropdownStyle = {}
-  if (open && ref.current) {
-    const rect = ref.current.getBoundingClientRect()
-    dropdownStyle = {
-      position: 'fixed',
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      minWidth: rect.width,
-      margin: 0
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        minWidth: rect.width,
+        margin: 0
+      })
     }
-  }
+  }, [open])
 
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
@@ -153,48 +164,136 @@ function RiwayatDropdown({ selected, onChange }) {
   )
 }
 
-const KB_DATA = [
-  { id: 1, date: '24 Apr 27', type: 'Sistem & IT Support', question: 'Aplikasi email saya tiba-tiba tidak bisa mengirim pesan. Muncul pesan error \'server tidak merespon\'. Saya sudah cek koneksi internet baik-baik saja.', division: 'Pemasaran' },
-  { id: 2, date: '24 Apr 30', type: 'Sistem & IT Support', question: 'Kami membutuhkan akses ke folder bersama di server, tapi tidak bisa membuka folder tersebut. Muncul pesan \'akses ditolak\'.', division: 'Direksi' },
-  { id: 3, date: '24 Apr 28', type: 'Sistem & IT Support', question: 'Saya mengalami kesulitan login ke akun kantor di komputer baru. Password sudah dicek benar, tapi tetap gagal masuk dengan pesan \'akses ditolak\'.', division: 'Produksi' },
-  { id: 4, date: '24 Mei 1', type: 'Sistem & IT Support', question: 'Koneksi Wi-Fi di lantai 3 sangat lambat dan sering terputus. Ini mengganggu pekerjaan kami yang harus online terus-menerus.', division: 'Logistik' },
-  { id: 5, date: '24 Apr 26', type: 'Sistem & IT Support', question: 'Printer di ruangan saya tidak bisa digunakan melalui jaringan. Status di komputer "offline", padahal printer menyala. Sudah coba restart tapi masih tidak bisa. Mohon bantuannya.', division: 'Penjualan' },
-  { id: 6, date: '24 Mei 3', type: 'Sistem & IT Support', question: 'Monitor saya sering mati sendiri setelah beberapa menit digunakan, meskipun komputer tetap hidup. Sudah coba ganti kabel tapi sama saja.', division: 'Printer' },
-  { id: 7, date: '24 Mei 4', type: 'Sistem & IT Support', question: 'Saya tidak bisa membuka dokumen di SharePoint. Terkadang muncul error \'file tidak ditemukan\' padahal dokumen masih ada.', division: 'Riset' },
-  { id: 8, date: '24 Mei 2', type: 'Sistem & IT Support', question: 'Aplikasi akuntansi tidak bisa dibuka setelah update terakhir. Muncul notifikasi error \'file corrupt\'. Tolong bantu cek.', division: 'Keuangan' },
-  { id: 9, date: '24 Apr 29', type: 'Sistem & IT Support', question: 'Komputer saya sering restart sendiri tanpa pemberitahuan. Sudah coba bersihkan file sementara tapi masalah masih terjadi.', division: 'Hukum' },
-  { id: 10, date: '24 Mei 5', type: 'Sistem & IT Support', question: 'Keyboard di laptop sering menulis huruf ganda tanpa saya tekan dua kali. Sudah coba restart tapi masalah masih muncul.', division: 'Umum' },
-];
-
 export default function KnowledgeBasePage() {
   const [selectedKB, setSelectedKB] = useState(null)
+  const [kbData, setKbData] = useState([])
+  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [filterDivisi, setFilterDivisi] = useState([])
-const [filterJenis, setFilterJenis] = useState([])
+  const [filterJenis, setFilterJenis] = useState([])
   const [riwayatSort, setRiwayatSort] = useState('Terbaru')
-  const totalPages = Math.ceil(68 / 10)
+  const [totalItems, setTotalItems] = useState(0)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
-function parseDate(dateStr) {
-    const [day, monthStr, yearDay] = dateStr.split(' ');
-    const months = { 'Jan':0, 'Feb':1, 'Mar':2, 'Apr':3, 'Mei':4, 'Jun':5, 'Jul':6, 'Agu':7, 'Sep':8, 'Okt':9, 'Nov':10, 'Des':11 };
-    const month = months[monthStr.slice(0,3)] || 4; // default Mei
-    const dayNum = parseInt(yearDay || day) || 1;
-    return new Date(2024, month, dayNum);
+  const [categories, setCategories] = useState([PLACEHOLDER_JENIS])
+  const [divisions, setDivisions] = useState([PLACEHOLDER_DIVISI])
+  const [optionsLoading, setOptionsLoading] = useState(true)
+
+  const [formTitle, setFormTitle] = useState('')
+  const [formContent, setFormContent] = useState('')
+  const [formCategory, setFormCategory] = useState('')
+  const [formDivision, setFormDivision] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const fetchOptions = useCallback(async () => {
+    try {
+      const options = await getOptions()
+      setCategories([PLACEHOLDER_JENIS, ...options.categories])
+      setDivisions([PLACEHOLDER_DIVISI, ...options.divisions])
+    } catch (error) {
+      console.error('Failed to fetch options:', error)
+      setCategories([PLACEHOLDER_JENIS, 'General', 'Sistem & IT Support', 'Troubleshooting Perangkat', 'Service Repair', 'Maintenance & Setup', 'Produksi & Operasi', 'Kebijakan Internal', 'Penggunaan Tools'])
+      setDivisions([PLACEHOLDER_DIVISI, 'Operations', 'R&D', 'Marketing', 'Finance', 'Customer Service'])
+    } finally {
+      setOptionsLoading(false)
+    }
+  }, [])
+
+  const fetchKbData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const category = filterJenis.length ? filterJenis.join(',') : null
+      const division = filterDivisi.length ? filterDivisi.join(',') : null
+      const data = await getKnowledgeBase(category, division)
+      setKbData(data)
+      setTotalItems(data.length)
+    } catch (error) {
+      console.error('Failed to fetch KB data:', error)
+      setKbData([])
+    } finally {
+      setLoading(false)
+    }
+  }, [filterJenis, filterDivisi])
+
+  useEffect(() => {
+    fetchOptions()
+  }, [fetchOptions])
+
+  useEffect(() => {
+    if (!optionsLoading) {
+      fetchKbData()
+    }
+  }, [fetchKbData, optionsLoading])
+
+  async function handleCreate() {
+    if (!formTitle || !formContent || !formCategory || !formDivision) {
+      alert('Semua field harus diisi')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const newKb = await createKnowledgeBase({
+        title: formTitle,
+        content: formContent,
+        category: formCategory,
+        division: formDivision
+      })
+      setKbData(prev => [newKb, ...prev])
+      setPage(1)
+      setFormTitle('')
+      setFormContent('')
+      setFormCategory('')
+      setFormDivision('')
+      alert('Knowledge base berhasil ditambahkan')
+    } catch (error) {
+      console.error('Failed to create KB:', error)
+      alert('Gagal menambahkan knowledge base')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const sortedData = [...KB_DATA].sort((a, b) => {
-    const dateA = parseDate(a.date);
-    const dateB = parseDate(b.date);
+  async function handleDelete(kbId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus knowledge base ini?')) return
+    try {
+      await deleteKnowledgeBase(kbId)
+      setKbData(prev => prev.filter(item => item.id !== kbId))
+      if (selectedKB && selectedKB.id === kbId) setSelectedKB(null)
+    } catch (error) {
+      console.error('Failed to delete KB:', error)
+      alert('Gagal menghapus knowledge base')
+    }
+  }
+
+  const sortedData = [...kbData].sort((a, b) => {
+    let dateA, dateB
+    if (riwayatSort === 'Baru Diperbarui') {
+      dateA = new Date(a.updated_at)
+      dateB = new Date(b.updated_at)
+    } else {
+      dateA = new Date(a.created_at)
+      dateB = new Date(b.created_at)
+    }
     if (riwayatSort === 'Terlama') return dateA - dateB;
-    if (riwayatSort === 'Terbaru') return dateB - dateA;
-    return dateB - dateA; // Baru Diperbarui default Terbaru
+    return dateB - dateA;
   });
 
   const filteredItems = sortedData.filter(item => {
     if (filterDivisi.length && !filterDivisi.includes(item.division)) return false
-    if (filterJenis.length && !filterJenis.includes(item.type)) return false
+    if (filterJenis.length && !filterJenis.includes(item.category)) return false
     return true
   })
+
+  const actualTotalPages = Math.ceil(filteredItems.length / itemsPerPage)
+  const startIndex = (page - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedItems = filteredItems.slice(startIndex, endIndex)
+
+  useEffect(() => {
+    if (page > actualTotalPages && actualTotalPages > 0) {
+      setPage(actualTotalPages)
+    }
+  }, [page, actualTotalPages])
 
   return (
     <div className="page-content">
@@ -210,43 +309,56 @@ function parseDate(dateStr) {
                   <RiwayatDropdown selected={riwayatSort} onChange={setRiwayatSort} />
                 </div>
                 <div className="kb-h-divisi">
-                  <FilterDropdown label="Divisi" options={DIVISI_OPTIONS} selected={filterDivisi} onChange={setFilterDivisi} />
+                  <FilterDropdown label="Divisi" options={divisions.slice(1)} selected={filterDivisi} onChange={setFilterDivisi} />
                 </div>
                 <div className="kb-h-aksi">Aksi</div>
               </div>
               <div className="kb-content-wrapper">
                 <div className="kb-body">
-                  {filteredItems.map(item => (
-                    <div key={item.id} className="kb-row">
-                      <div className="kb-date">{item.date}</div>
-                      <div className="kb-info">
-                        <span className="kb-type">{item.type}</span>
-                        <p className="kb-q">{item.question}</p>
-                      </div>
-                      <div className="kb-division">
-                        <span className="division-badge">{item.division}</span>
-                      </div>
-                      <div className="kb-actions">
-                        <button className="btn-detail" onClick={() => setSelectedKB(item)}>Detail</button>
-                        <button className="icon-btn" onClick={() => setSelectedKB(item)}><ArrowUpRight size={13} /></button>
-                      </div>
+                  {loading ? (
+                    <div className="loading-state">
+                      <Loader2 className="spin" size={24} />
+                      <span>Loading...</span>
                     </div>
-                  ))}
+                  ) : filteredItems.length === 0 ? (
+                    <div className="empty-state">Tidak ada data knowledge base</div>
+                  ) : (
+                    paginatedItems.map(item => (
+                      <div key={item.id} className="kb-row">
+                        <div className="kb-date">{formatDate(item.updated_at)}</div>
+                        <div className="kb-info">
+                          <span className="kb-type">{item.category}</span>
+                          <p className="kb-q">{item.title}</p>
+                        </div>
+                        <div className="kb-division">
+                          <span className="division-badge">{item.division}</span>
+                        </div>
+                        <div className="kb-actions">
+                         <button className="btn-detail" onClick={() => setSelectedKB(item)}>
+                           Detail <ArrowUpRight size={13} />
+                         </button>
+                       </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div className="kb-table-footer">
-                <span className="muted">0 of 68 row(s) selected.</span>
-                <div className="pagination">
-                  <span className="muted">Rows per page</span>
-                  <select className="rows-select"><option>10</option><option>25</option></select>
-                  <span className="muted">Page {page} of {totalPages}</span>
-                  <div className="page-btns">
-                    <button onClick={() => setPage(1)}>«</button>
-                    <button onClick={() => setPage(p => Math.max(1,p-1))}>‹</button>
-                    <button onClick={() => setPage(p => Math.min(totalPages,p+1))}>›</button>
-                    <button onClick={() => setPage(totalPages)}>»</button>
-                  </div>
+            <div className="kb-table-footer">
+              <span className="muted">0 of {filteredItems.length} row(s) selected.</span>
+              <div className="pagination">
+                <span className="muted">Rows per page</span>
+                <select className="rows-select" value={itemsPerPage} onChange={e => { setItemsPerPage(Number(e.target.value)); setPage(1) }}>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                </select>
+                <span className="muted">Page {page} of {actualTotalPages}</span>
+                <div className="page-btns">
+                  <button onClick={() => setPage(1)}>«</button>
+                  <button onClick={() => setPage(p => Math.max(1,p-1))}>‹</button>
+                  <button onClick={() => setPage(p => Math.min(actualTotalPages,p+1))}>›</button>
+                  <button onClick={() => setPage(actualTotalPages)}>»</button>
                 </div>
               </div>
             </div>
@@ -259,32 +371,53 @@ function parseDate(dateStr) {
 
             <div className="kb-field">
               <label>Pertanyaan</label>
-              <input type="text" placeholder="Masukkan pertanyaan..." />
+              <input
+                type="text"
+                placeholder="Masukkan pertanyaan..."
+                value={formTitle}
+                onChange={e => setFormTitle(e.target.value)}
+              />
             </div>
 
             <div className="kb-row-fields">
               <div className="kb-field">
-                <label>Jenis Produk</label>
-                <JenisProdukDropdown />
+                <label>Divisi</label>
+                <DivisiDropdown selected={formDivision} onChange={setFormDivision} options={divisions} />
               </div>
               <div className="kb-field">
                 <label>Jenis Pertanyaan</label>
-                <JenisPertanyaanDropdown />
+                <JenisPertanyaanDropdown selected={formCategory} onChange={setFormCategory} options={categories} />
               </div>
             </div>
 
             <div className="kb-field">
               <label>Jawaban Lengkap</label>
-              <textarea placeholder="Masukkan jawaban lengkap..." rows={5} />
+              <textarea
+                placeholder="Masukkan jawaban lengkap..."
+                rows={5}
+                value={formContent}
+                onChange={e => setFormContent(e.target.value)}
+              />
             </div>
 
-            <button className="btn-tambah">Tambahkan</button>
+            <button
+              className="btn-tambah"
+              onClick={handleCreate}
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="spin" size={16} /> : 'Tambahkan'}
+            </button>
           </div>
         </div>
       </div>
 
       {selectedKB && (
-        <KBDetailModal item={selectedKB} onClose={() => setSelectedKB(null)} />
+        <KBDetailModal
+          item={selectedKB}
+          onClose={() => setSelectedKB(null)}
+          onUpdate={(updated) => setKbData(prev => prev.map(item => item.id === updated.id ? updated : item))}
+          onDelete={(id) => { setKbData(prev => prev.filter(item => item.id !== id)); setSelectedKB(null) }}
+        />
       )}
     </div>
   )
