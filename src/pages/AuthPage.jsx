@@ -4,11 +4,12 @@ import './AuthPage.css'
 import { apiFetch } from '../api'
 
 export default function AuthPage({ onLogin }) {
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [mode, setMode] = useState('login') // 'login' | 'register' | 'forgot'
   const [showPass, setShowPass] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
 
   const handleSubmit = async () => {
     setError('')
@@ -79,9 +80,76 @@ export default function AuthPage({ onLogin }) {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+  const handleForgot = async () => {
+    if (!form.email) { setError('Masukkan email Anda.'); return }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: form.email }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        setError(typeof err.detail === 'string' ? err.detail : 'Terjadi kesalahan.')
+        return
+      }
+      setForgotSent(true)
+    } catch {
+      setError('Tidak dapat terhubung ke server.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const switchMode = (next) => {
     setMode(next)
     setError('')
+    setForgotSent(false)
+  }
+
+  if (mode === 'forgot') {
+    return (
+      <div className="auth-bg">
+        <div className="auth-center">
+          <h1 className="auth-title">Lupa Password</h1>
+          <p className="auth-sub">Masukkan email Anda dan kami akan mengirim link untuk reset password.</p>
+          <div className="auth-card">
+            {forgotSent ? (
+              <>
+                <p style={{ color: 'var(--success)', fontSize: 14, textAlign: 'center', marginBottom: 20 }}>
+                  Link reset password telah dikirim ke <strong>{form.email}</strong>.<br />
+                  Periksa kotak masuk atau folder spam Anda.
+                </p>
+                <button className="auth-submit" onClick={() => switchMode('login')}>
+                  Kembali ke Login
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="auth-field">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="Masukkan email Anda..."
+                    value={form.email}
+                    onChange={set('email')}
+                    onKeyDown={e => e.key === 'Enter' && handleForgot()}
+                  />
+                </div>
+                {error && <p className="auth-error">{error}</p>}
+                <button className="auth-submit" onClick={handleForgot} disabled={loading}>
+                  {loading ? 'Mengirim...' : 'Kirim Link Reset'}
+                </button>
+                <div className="auth-switch">
+                  <button className="link-btn" onClick={() => switchMode('login')}>Kembali ke Login</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -134,7 +202,7 @@ export default function AuthPage({ onLogin }) {
 
           {mode === 'login' && (
             <div className="forgot-row">
-              <button className="link-btn" onClick={() => alert('Fitur lupa password belum tersedia.')}>
+              <button className="link-btn" onClick={() => switchMode('forgot')}>
                 Lupa password?
               </button>
             </div>

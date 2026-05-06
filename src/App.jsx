@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { apiFetch, setUnauthorizedHandler } from './api'
 import AuthPage from './pages/AuthPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import Sidebar from './components/Sidebar'
 import ChatPage from './pages/ChatPage'
 import DashboardPage from './pages/DashboardPage'
@@ -12,6 +13,8 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [page, setPage] = useState('chat')
   const [initializing, setInitializing] = useState(true)
+
+  const resetToken = new URLSearchParams(window.location.search).get('reset_token')
 
   // Auto-login: cek token tersimpan saat pertama kali render
   useEffect(() => {
@@ -47,6 +50,18 @@ export default function App() {
   }
 
   if (initializing) return null
+
+  if (resetToken) {
+    return (
+      <ResetPasswordPage
+        token={resetToken}
+        onDone={() => {
+          window.history.replaceState({}, '', window.location.pathname)
+          window.location.reload()
+        }}
+      />
+    )
+  }
 
   if (!user) {
     return <AuthPage onLogin={handleLogin} />
