@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, TrendingDown, ArrowUpRight, ChevronDown, Share2, RotateCcw } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ChevronDown, Share2, RotateCcw } from 'lucide-react'
 import ShareModal from '../components/ShareModal'
 import { apiFetch } from '../api'
 import './ReportPage.css'
@@ -48,22 +48,38 @@ const PERIOD_MAP = {
   '7days': '7d'
 }
 
-const StatCard = ({ label, value, delta, deltaDir, note }) => (
-  <div className="stat-card">
-    <div className="stat-top">
-      <span className="stat-label">{label}</span>
-      {deltaDir === 'up' ? <TrendingUp size={14} className="trend-up" /> : <TrendingDown size={14} className="trend-down" />}
+const StatCard = ({ label, value, delta, deltaDir, note }) => {
+  const trendIcon = deltaDir === 'up'
+    ? <TrendingUp size={14} className="trend-up" />
+    : deltaDir === 'down'
+      ? <TrendingDown size={14} className="trend-down" />
+      : <Minus size={14} className="trend-flat" />
+
+  const deltaIcon = deltaDir === 'up'
+    ? <TrendingUp size={11} />
+    : deltaDir === 'down'
+      ? <TrendingDown size={11} />
+      : <Minus size={11} />
+
+  const deltaClass = deltaDir === 'up' ? 'delta-up' : deltaDir === 'down' ? 'delta-down' : 'delta-flat'
+
+  return (
+    <div className="stat-card">
+      <div className="stat-top">
+        <span className="stat-label">{label}</span>
+        {trendIcon}
+      </div>
+      <div className="stat-value">{value}</div>
+      <div className="stat-meta">
+        <span className={deltaClass}>
+          {deltaIcon}
+          {delta}
+        </span>
+      </div>
+      <div className="stat-note">{note}</div>
     </div>
-    <div className="stat-value">{value}</div>
-    <div className="stat-meta">
-      <span className={deltaDir === 'up' ? 'delta-up' : 'delta-down'}>
-        {deltaDir === 'up' ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-        {delta}
-      </span>
-    </div>
-    <div className="stat-note">{note}</div>
-  </div>
-)
+  )
+}
 
 function SkeletonCard() {
   return (
@@ -80,7 +96,7 @@ export default function ReportPage() {
   const [showShare, setShowShare] = useState(false)
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState(null)
-  
+
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -121,17 +137,26 @@ export default function ReportPage() {
 
   const periodLabel = { '3months': '3 bulan', '30days': '30 hari', '7days': '7 hari' }[period]
 
+  const dateRange = (() => {
+    const days = { '3months': 90, '30days': 30, '7days': 7 }[period]
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - days)
+    const fmt = d => d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+    return `${fmt(start)} – ${fmt(end)}`
+  })()
+
   return (
     <div className="page-content">
       <div className="report-topbar">
         <div>
-          <h1 className="page-title" style={{marginBottom:2}}>Analysis Report</h1>
-          <span className="muted" style={{fontSize:12.5}}>Analisis selama periode {periodLabel}</span>
+          <h1 className="page-title" style={{ marginBottom: 2 }}>Analysis Report</h1>
+          <span className="muted" style={{ fontSize: 12.5 }}>Analisis selama periode {periodLabel}</span>
         </div>
         <div className="report-controls">
           <div className="period-tabs">
-            {[['3months','Last 3 months'],['30days','Last 30 days'],['7days','Last 7 days']].map(([k,l]) => (
-              <button key={k} className={`period-tab ${period===k?'active':''}`} onClick={() => { setPeriod(k); setPage(1) }}>{l}</button>
+            {[['3months', 'Last 3 months'], ['30days', 'Last 30 days'], ['7days', 'Last 7 days']].map(([k, l]) => (
+              <button key={k} className={`period-tab ${period === k ? 'active' : ''}`} onClick={() => { setPeriod(k); setPage(1) }}>{l}</button>
             ))}
           </div>
           <button className="btn-share" onClick={() => setShowShare(true)}>
@@ -153,20 +178,27 @@ export default function ReportPage() {
         <h2 className="section-title">Interaksi Chatbot</h2>
         <div className="stats-grid">
           {loading ? (
-            <><SkeletonCard /><SkeletonCard /></>
+            <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
           ) : (
             <>
               <StatCard
+                label="Total Pertanyaan yang Masuk"
+                value={cm ? cm.total_questions?.toLocaleString('id-ID') : '—'}
+                delta={cm?.questions_trend?.value !== undefined ? `${Math.abs(cm.questions_trend.value)}%` : '—'}
+                deltaDir={cm?.questions_trend?.direction ?? 'up'}
+                note={cm?.questions_trend?.text ?? ''}
+              />
+              <StatCard
                 label="Total Interaksi Chatbot"
-                value={cm ? cm.total_interactions.toLocaleString('id-ID') : '—'}
-                delta={cm?.interactions_trend?.text ?? '—'}
+                value={cm ? cm.total_interactions?.toLocaleString('id-ID') : '—'}
+                delta={cm?.interactions_trend?.value !== undefined ? `${Math.abs(cm.interactions_trend.value)}%` : '—'}
                 deltaDir={cm?.interactions_trend?.direction ?? 'up'}
                 note={cm?.interactions_trend?.text ?? ''}
               />
               <StatCard
-                label="Tingkat Resolusi Chatbot"
+                label="Presentase Penyelesaian Tanpa Tiket"
                 value={cm ? `${cm.resolution_rate}%` : '—'}
-                delta={cm?.resolution_trend?.text ?? '—'}
+                delta={cm?.resolution_trend?.value !== undefined ? `${Math.abs(cm.resolution_trend.value)}%` : '—'}
                 deltaDir={cm?.resolution_trend?.direction ?? 'up'}
                 note={cm?.resolution_trend?.text ?? ''}
               />
@@ -185,21 +217,21 @@ export default function ReportPage() {
               <StatCard
                 label="Total Eskalasi ke Tiket"
                 value={tm ? tm.total_escalations.toLocaleString('id-ID') : '—'}
-                delta={tm?.escalations_trend?.text ?? '—'}
+                delta={tm?.escalations_trend?.value !== undefined ? `${Math.abs(tm.escalations_trend.value)}%` : '—'}
                 deltaDir={tm?.escalations_trend?.direction ?? 'down'}
                 note={tm?.escalations_trend?.text ?? ''}
               />
               <StatCard
                 label="Persentase Tiket Terselesaikan"
                 value={tm ? `${tm.resolution_rate}%` : '—'}
-                delta={tm?.resolution_trend?.text ?? '—'}
+                delta={tm?.resolution_trend?.value !== undefined ? `${Math.abs(tm.resolution_trend.value)}%` : '—'}
                 deltaDir={tm?.resolution_trend?.direction ?? 'up'}
                 note={tm?.resolution_trend?.text ?? ''}
               />
               <StatCard
                 label="Rata-rata Waktu Penyelesaian"
                 value={tm?.avg_resolution_time ?? '—'}
-                delta={tm?.avg_resolution_time_trend?.text ?? '—'}
+                delta={tm?.avg_resolution_time_trend?.value !== undefined ? `${Math.abs(tm.avg_resolution_time_trend.value)}%` : '—'}
                 deltaDir={tm?.avg_resolution_time_trend?.direction ?? 'up'}
                 note={tm?.avg_resolution_time_trend?.text ?? ''}
               />
@@ -211,16 +243,16 @@ export default function ReportPage() {
       <section className="report-section">
         <h2 className="section-title">Tren Interaksi &amp; Tiket</h2>
         <div className="chart-card">
-          <div className="chart-label muted" style={{fontSize:12, marginBottom:8}}>Total for the last {periodLabel}</div>
+          <div className="chart-label muted" style={{ fontSize: 12, marginBottom: 8 }}>Total for the last {periodLabel}</div>
           {loading ? (
-             <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: 13 }}>
-               Memuat grafik…
-             </div>
-           ) : chartData.length === 0 ? (
-             <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: 13 }}>
-               Tidak ada data untuk periode ini
-             </div>
-           ) : (
+            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: 13 }}>
+              Memuat grafik…
+            </div>
+          ) : chartData.length === 0 ? (
+            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: 13 }}>
+              Tidak ada data untuk periode ini
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData}>
                 <defs>
@@ -245,7 +277,7 @@ export default function ReportPage() {
 
       <section className="report-section">
         <div className="section-topbar">
-          <h2 className="section-title" style={{marginBottom:0}}>Jenis Pertanyaan</h2>
+          <h2 className="section-title" style={{ marginBottom: 0 }}>Jenis Pertanyaan</h2>
           <SortDropdown sortBy={sortBy} onChange={setSortBy} />
         </div>
 
@@ -286,15 +318,15 @@ export default function ReportPage() {
             <span className="muted">Page {page} of {totalPages}</span>
             <div className="page-btns">
               <button onClick={() => setPage(1)}>«</button>
-              <button onClick={() => setPage(p => Math.max(1,p-1))}>‹</button>
-              <button onClick={() => setPage(p => Math.min(totalPages,p+1))}>›</button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))}>›</button>
               <button onClick={() => setPage(totalPages)}>»</button>
             </div>
           </div>
         </div>
       </section>
 
-      {showShare && <ShareModal onClose={() => setShowShare(false)} />}
+      {showShare && <ShareModal onClose={() => setShowShare(false)} apiPeriod={PERIOD_MAP[period]} periodLabel={periodLabel} dateRange={dateRange} />}
     </div>
   )
 }

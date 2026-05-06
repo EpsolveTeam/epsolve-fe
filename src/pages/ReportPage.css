@@ -103,6 +103,7 @@
 
 .trend-up { color: var(--success); }
 .trend-down { color: var(--error); }
+.trend-flat { color: var(--text-muted, #888); }
 
 .stat-value {
   font-size: 26px;
@@ -123,6 +124,7 @@
 }
 .delta-up { color: var(--success); }
 .delta-down { color: var(--error); }
+.delta-flat { color: var(--text-muted, #888); }
 
 .stat-note {
   font-size: 11.5px;
