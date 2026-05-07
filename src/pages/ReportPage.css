@@ -92,18 +92,38 @@
 .stat-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
 }
 
 .stat-label {
   font-size: 12.5px;
   color: var(--text-secondary);
+  flex: 1 1 auto;
 }
 
-.trend-up { color: var(--success); }
-.trend-down { color: var(--error); }
-.trend-flat { color: var(--text-muted, #888); }
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+}
+
+.stat-trend svg {
+  color: inherit;
+}
+
+.trend-up { color: inherit; }
+.trend-down { color: inherit; }
+.trend-flat { color: inherit; }
 
 .stat-value {
   font-size: 26px;

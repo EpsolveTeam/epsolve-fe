@@ -67,15 +67,12 @@ const StatCard = ({ label, value, delta, deltaDir, note }) => {
     <div className="stat-card">
       <div className="stat-top">
         <span className="stat-label">{label}</span>
-        {trendIcon}
-      </div>
-      <div className="stat-value">{value}</div>
-      <div className="stat-meta">
-        <span className={deltaClass}>
-          {deltaIcon}
+        <span className={`stat-trend ${deltaClass}`}>
+          {trendIcon}
           {delta}
         </span>
       </div>
+      <div className="stat-value">{value}</div>
       <div className="stat-note">{note}</div>
     </div>
   )
@@ -178,16 +175,9 @@ export default function ReportPage() {
         <h2 className="section-title">Interaksi Chatbot</h2>
         <div className="stats-grid">
           {loading ? (
-            <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
+            <><SkeletonCard /><SkeletonCard /></>
           ) : (
             <>
-              <StatCard
-                label="Total Pertanyaan yang Masuk"
-                value={cm ? cm.total_questions?.toLocaleString('id-ID') : '—'}
-                delta={cm?.questions_trend?.value !== undefined ? `${Math.abs(cm.questions_trend.value)}%` : '—'}
-                deltaDir={cm?.questions_trend?.direction ?? 'up'}
-                note={cm?.questions_trend?.text ?? ''}
-              />
               <StatCard
                 label="Total Interaksi Chatbot"
                 value={cm ? cm.total_interactions?.toLocaleString('id-ID') : '—'}

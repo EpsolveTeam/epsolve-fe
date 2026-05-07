@@ -78,9 +78,6 @@ export default function App() {
       <div className="app-main">
         <div className="topbar">
           <h1>Epsolve Smart Helpdesk</h1>
-           {user.role?.toLowerCase() === 'admin' && (
-             <span className="admin-badge">Admin</span>
-           )}
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {page === 'chat' && <ChatPage user={user} session={chatSession} />}
