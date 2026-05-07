@@ -21,7 +21,7 @@ export default function ShareModal({ onClose, apiPeriod = '3m', periodLabel = '3
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
-    apiFetch('/analytics/auto-report-settings')
+    apiFetch('/analytics/report-settings')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
@@ -66,8 +66,8 @@ export default function ShareModal({ onClose, apiPeriod = '3m', periodLabel = '3
     setSaving(true)
     setSaved(false)
     try {
-      const params = new URLSearchParams({ email: email.trim(), period })
-      const res = await apiFetch(`/analytics/auto-report-settings?${params}`, { method: 'PUT' })
+      const body = { recipient_email: email.trim(), period }
+      const res = await apiFetch(`/analytics/report-settings`, { method: 'POST', body: JSON.stringify(body) })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         setSaveError(err.detail || 'Gagal menyimpan pengaturan.')
