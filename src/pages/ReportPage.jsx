@@ -175,9 +175,16 @@ export default function ReportPage() {
         <h2 className="section-title">Interaksi Chatbot</h2>
         <div className="stats-grid">
           {loading ? (
-            <><SkeletonCard /><SkeletonCard /></>
+            <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
           ) : (
             <>
+              <StatCard
+                label="Total Pertanyaan yang Masuk"
+                value={tm ? tm.total_questions?.toLocaleString('id-ID') : '—'}
+                delta={tm?.questions_trend?.value !== undefined ? `${Math.abs(tm.questions_trend.value)}%` : '—'}
+                deltaDir={tm?.questions_trend?.direction ?? 'down'}
+                note={tm?.questions_trend?.text ?? ''}
+              />
               <StatCard
                 label="Total Interaksi Chatbot"
                 value={cm ? cm.total_interactions?.toLocaleString('id-ID') : '—'}
