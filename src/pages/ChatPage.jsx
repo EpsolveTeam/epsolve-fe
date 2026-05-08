@@ -32,21 +32,22 @@ export default function ChatPage({ user, session }) {
     { label: 'Maintenance & Setup' },
   ]
 
-   useEffect(() => {
-     if (session?.session_id && session.session_id !== sessionId) {
-       setSessionId(session.session_id)
-       loadChatHistory(session.session_id)
-     }
+  useEffect(() => {
+    if (session?.session_id) {
+      if (session.session_id !== sessionId) {
+        setSessionId(session.session_id)
+      }
+      loadChatHistory(session.session_id)
+      return
+    }
 
-     if (!session) {
-       setSessionId(null)
-       setMessages([])
-       setChatState('idle')
-     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [session])
+    setSessionId(null)
+    setMessages([])
+    setChatState('idle')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
 
-   const loadChatHistory = async (id) => {
+  const loadChatHistory = async (id) => { 
      setError('')
      setChatState('loading')
      setLoading(true)
@@ -63,8 +64,11 @@ export default function ChatPage({ user, session }) {
         if (typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
           return imageUrl
         }
-        return imageUrl.startsWith('/') ? `${import.meta.env.VITE_API_BASE_URL || ''}${imageUrl}` : `${import.meta.env.VITE_API_BASE_URL || ''}/${imageUrl}`
+        return imageUrl.startsWith('/')
+          ? `${import.meta.env.VITE_API_BASE_URL || ''}${imageUrl}`
+          : `${import.meta.env.VITE_API_BASE_URL || ''}/${imageUrl}`
       }
+
 
       const ordered = history
         .flatMap(entry => [
@@ -72,7 +76,8 @@ export default function ChatPage({ user, session }) {
             id: `user-${entry.id}`,
             role: 'user',
             text: entry.user_query,
-            imageUrl: toImageUrl(entry.image_url),
+            imageUrl: toImageUrl(entry.image_query_url || entry.image_url),
+
             created_at: entry.created_at,
           },
           { id: `bot-${entry.id}`, role: 'bot', text: entry.bot_response, created_at: entry.created_at },
@@ -103,12 +108,28 @@ export default function ChatPage({ user, session }) {
     setChatState('loading')
 
     const activeSessionId = sessionId || createSessionId()
+
+    // reset input segera setelah submit (agar tidak menunggu respon AI)
+    // untuk image preview, jangan langsung revoke saat message belum dirender
+    const capturedInput = input
+    const capturedImagePreviewUrl = imagePreviewUrl
+    const capturedImageName = imageName
+
+    setInput('')
+
+    // reset UI image setelah user message masuk ke list
+    // (jadi preview yang sudah tertangkap tetap bisa ditampilkan)
+    setImageFile(null)
+    setImagePreviewUrl('')
+    setImageName('')
+
     const userMessage = {
       id: `${activeSessionId}-user-${Date.now()}`,
       role: 'user',
-      text: input,
-      imageUrl: imagePreviewUrl || undefined,
+      text: capturedInput,
+      imageUrl: capturedImagePreviewUrl || undefined,
     }
+
     const loadingMessage = { id: `${activeSessionId}-loading`, role: 'bot', loading: true }
 
     setMessages(prev => [...prev, userMessage, loadingMessage])
@@ -139,10 +160,6 @@ export default function ChatPage({ user, session }) {
         ? { ...msg, loading: false, text: botText }
         : msg
       ))
-      setInput('')
-      setImageFile(null)
-      setImagePreviewUrl('')
-      setImageName('')
       setChatState('response')
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan saat mengirim pesan')
@@ -182,15 +199,17 @@ export default function ChatPage({ user, session }) {
     fileInputRef.current?.click()
   }
 
-  useEffect(() => {
-    return () => {
-      if (imagePreviewUrl) {
-        URL.revokeObjectURL(imagePreviewUrl)
-      }
-    }
-  }, [imagePreviewUrl])
+   useEffect(() => {
+     return () => {
+       if (imagePreviewUrl) {
+         URL.revokeObjectURL(imagePreviewUrl)
+       }
+     }
+   }, [])
 
-  const hasBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
+   const hasCompletedBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
+   const hasLoadingMessage = messages.some(msg => msg.loading)
+   const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage
 
   const renderMessages = () => {
     if (messages.length === 0 && !loading && !error) {
@@ -279,13 +298,13 @@ export default function ChatPage({ user, session }) {
         {renderMessages()}
       </div>
 
-      {hasBotResponse && (
-        <div style={{ padding: '0 28px 18px', display: 'flex', justifyContent: 'flex-start' }}>
-          <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
-            Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
-          </button>
-        </div>
-      )}
+       {showEscalateButton && (
+         <div style={{ padding: '0 28px 18px', display: 'flex', justifyContent: 'flex-start' }}>
+           <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
+             Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
+           </button>
+         </div>
+       )}
 
       {(chatState !== 'idle' || messages.length > 0) && (
         <div className="chat-input-section">

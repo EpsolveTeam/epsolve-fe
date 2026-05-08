@@ -1,7 +1,50 @@
-import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronDown } from 'lucide-react'
 import './TicketFormModal.css'
 import { apiFetch, BASE_URL } from '../api'
+
+function SelectDropdown({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState({})
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        margin: 0
+      })
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} style={{position:'relative',display:'block'}}>
+      <div className="form-select-trigger" onClick={() => setOpen(o => !o)}>
+        <span>{selected || label}</span>
+        <ChevronDown size={12} style={open ? {transform:'rotate(180deg)',transition:'transform 0.15s'} : {transition:'transform 0.15s'}} />
+      </div>
+      {open && (
+        <div className="form-select-dropdown" style={dropdownStyle}>
+          {options.map(opt => (
+            <div key={opt} className="form-select-option" onClick={() => { onChange(opt === selected ? '' : opt); setOpen(false); }}>
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function TicketFormModal({ onClose, user }) {
   const [form, setForm] = useState({
@@ -95,21 +138,21 @@ export default function TicketFormModal({ onClose, user }) {
         <div className="form-row">
           <div className="form-field">
             <label>Divisi</label>
-            <select value={form.division} onChange={set('division')}>
-              <option value="">Pilih divisi Anda</option>
-              {options.divisions.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <SelectDropdown
+              label="Pilih divisi Anda"
+              options={options.divisions}
+              selected={form.division}
+              onChange={(value) => setForm(f => ({ ...f, division: value }))}
+            />
           </div>
           <div className="form-field">
             <label>Jenis Pertanyaan</label>
-            <select value={form.category} onChange={set('category')}>
-              <option value="">Pilih jenis pertanyaan</option>
-              {options.categories.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <SelectDropdown
+              label="Pilih jenis pertanyaan"
+              options={options.categories}
+              selected={form.category}
+              onChange={(value) => setForm(f => ({ ...f, category: value }))}
+            />
           </div>
         </div>
 

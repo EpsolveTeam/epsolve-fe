@@ -81,15 +81,19 @@
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   color: white;
+  flex-shrink: 0;
 }
 
 .logo-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .logo-sub { font-size: 11px; color: var(--text-muted); }
 
 .logo-chevron {
-  background: none; border: none;
+  background: none;
+  border: none;
   color: var(--text-muted);
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .sidebar-nav {
@@ -114,13 +118,15 @@
   width: 100%;
   text-align: left;
   transition: all 0.12s;
+  cursor: pointer;
 }
 
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-item.active { background: rgba(0, 0, 0, 0.75); color: white; }
+.nav-item.active { background: rgba(0,0,0,0.75); color: white; }
 
 .nav-group-btn {
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 7px 10px;
   border-radius: var(--radius-sm);
@@ -130,6 +136,7 @@
   font-size: 13px;
   width: 100%;
   transition: all 0.12s;
+  cursor: pointer;
 }
 .nav-group-btn:hover { color: var(--text-primary); }
 .nav-group-left { display: flex; align-items: center; gap: 9px; }
@@ -144,38 +151,130 @@
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
 .nav-history.open {
-  max-height: 300px;
+  max-height: 9999px;
   opacity: 1;
+  overflow-y: auto;
 }
 
+/* ── History Item Wrapper ── */
+.nav-history-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.nav-history-item-wrapper:hover {
+  background: var(--bg-hover);
+}
+
+/* Session item button */
 .nav-history-item {
-  padding: 8px 16px 8px 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px 8px 8px;
   background: none;
   border: none;
   color: var(--text-secondary);
   font-size: 12.5px;
   text-align: left;
   cursor: pointer;
-  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.12s;
+  border-radius: var(--radius-sm);
 }
 
-.nav-history-item:hover {
-  background: var(--bg-hover);
-  color: white;
-  border-radius: var(--radius-sm);
+.nav-history-item-wrapper:hover .nav-history-item {
+  color: var(--text-primary);
 }
 
 .nav-history-item.active {
-  background: rgba(0, 0, 0, 0.75);
   color: white;
-  border-radius: var(--radius-sm);
 }
 
+.nav-history-item-wrapper:has(.nav-history-item.active) {
+  background: rgba(0,0,0,0.75);
+}
+
+/* Three dots menu button */
+.nav-history-menu-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  margin-right: 4px;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+}
+
+.nav-history-item-wrapper:hover .nav-history-menu-btn {
+  opacity: 1;
+}
+
+.nav-history-menu-btn:hover,
+.nav-history-menu-btn.open {
+  opacity: 1;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+/* Dropdown */
+.nav-history-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  min-width: 80px;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.dropdown-delete { 
+  color: var(--text-secondary); 
+}
+.dropdown-delete:hover {
+  background: var(--bg-hover);
+  color: var(--error);
+}
+
+/* ── Footer ── */
 .sidebar-footer {
   padding: 12px 14px;
   border-top: 1px solid var(--border-subtle);
@@ -213,6 +312,7 @@
   border-radius: var(--radius-sm);
   transition: all 0.12s;
   flex-shrink: 0;
+  cursor: pointer;
 }
 .logout-btn:hover {
   color: var(--error);

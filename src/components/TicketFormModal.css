@@ -34,7 +34,6 @@
 }
 
 .form-field input,
-.form-field select,
 .form-field textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -48,7 +47,6 @@
 }
 
 .form-field input:focus,
-.form-field select:focus,
 .form-field textarea:focus {
   border-color: var(--accent);
 }
@@ -58,11 +56,53 @@
   color: var(--text-muted);
 }
 
-.form-field select option {
+.form-field textarea { resize: vertical; }
+
+.form-select-trigger {
   background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  min-height: 38px;
+  outline: none;
+  transition: border-color 0.12s;
 }
 
-.form-field textarea { resize: vertical; }
+.form-select-trigger:focus,
+.form-select-trigger:hover {
+  border-color: var(--accent);
+}
+
+.form-select-dropdown {
+  position: fixed;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.form-select-option {
+  padding: 10px 12px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.form-select-option:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 
 .file-input-wrap {
   display: flex;
