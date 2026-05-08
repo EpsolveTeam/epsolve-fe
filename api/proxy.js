@@ -2,13 +2,9 @@ export default async function handler(req, res) {
   try {
     const baseURL = process.env.BACKEND_URL;
 
-    const rawPath = req.query.path;
+    const path = req.url.replace("/api/proxy", "");
 
-    const path = Array.isArray(rawPath)
-      ? rawPath.join("/")
-      : rawPath || "";
-
-    const url = `${baseURL}/${path}`;
+    const url = `${baseURL}${path}`;
 
     const response = await fetch(url, {
       method: req.method,
