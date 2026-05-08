@@ -10,8 +10,6 @@ export default async function handler(req, res) {
 
     const url = `${baseURL}/${path}`;
 
-    console.log("TARGET:", url);
-
     const response = await fetch(url, {
       method: req.method,
       headers: {
@@ -26,13 +24,9 @@ export default async function handler(req, res) {
 
     const text = await response.text();
 
-    console.log("STATUS:", response.status);
-
     res.status(response.status).send(text);
 
   } catch (err) {
-    console.error("FULL ERROR:", err);
-
     res.status(500).json({
       error: err.message,
     });
