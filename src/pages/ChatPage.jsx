@@ -1,66 +1,29 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Image, ArrowUp, ExternalLink, AlertCircle } from 'lucide-react'
 import { apiFetch } from '../api'
 import TicketFormModal from '../components/TicketFormModal'
 import './ChatPage.css'
 
-
+const createSessionId = () => {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID()
+  }
+  return `session-${Date.now()}-${Math.floor(Math.random() * 100000)}`
+}
 
 export default function ChatPage({ user, session }) {
   const [chatState, setChatState] = useState('idle')
   const [input, setInput] = useState('')
-  const [showTicketForm, setShowTicketForm] = useState(false)
-  const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
-  const [selectedImage, setSelectedImage] = useState(null)
-  const messagesEndRef = useRef(null)
+  const [showTicketForm, setShowTicketForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [sessionId, setSessionId] = useState(session?.session_id || null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('')
+  const [imageName, setImageName] = useState('')
   const fileInputRef = useRef(null)
   const userName = user?.name || 'User'
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  useEffect(() => {
-    if (session) {
-      // Load history
-      setSessionId(session.session_id)
-      apiFetch('/chat/history/' + session.session_id)
-        .then(r => r.json())
-        .then(history => {
-          const allMsgs = []
-          history.forEach(h => {
-            allMsgs.push({
-              id: h.id + '_user',
-              type: 'user',
-              content: h.user_query,
-              image: h.image_query_url,
-              created_at: h.created_at
-            })
-            allMsgs.push({
-              id: h.id + '_bot',
-              type: 'bot',
-              content: h.bot_response,
-              resolved: h.is_resolved,
-              created_at: h.created_at
-            })
-          })
-          allMsgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-          setMessages(allMsgs)
-          setChatState('response')
-        })
-        .catch(() => setChatState('error'))
-    } else {
-      // New chat
-      setSessionId(crypto.randomUUID())
-      setMessages([])
-      setChatState('idle')
-    }
-  }, [session])
 
   const SHORTCUT_OPTIONS = [
     { label: 'Produksi & Operasional' },
@@ -69,84 +32,275 @@ export default function ChatPage({ user, session }) {
     { label: 'Maintenance & Setup' },
   ]
 
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setSelectedImage(file)
-    }
-  }
+   useEffect(() => {
+     if (session?.session_id && session.session_id !== sessionId) {
+       setSessionId(session.session_id)
+       loadChatHistory(session.session_id)
+     }
 
-  const handleImageClick = () => {
-    fileInputRef.current.click()
-  }
+     if (!session) {
+       setSessionId(null)
+       setMessages([])
+       setChatState('idle')
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [session])
+
+   const loadChatHistory = async (id) => {
+     setError('')
+     setChatState('loading')
+     setLoading(true)
+
+     try {
+       const res = await apiFetch(`/chat/history/${encodeURIComponent(id)}`)
+       if (!res.ok) {
+         throw new Error('Gagal memuat riwayat chat')
+       }
+       const history = await res.json()
+      const toImageUrl = (imageUrl) => {
+        if (!imageUrl) return undefined
+        // kalau backend hanya simpan path relatif, pastikan jadi URL absolut
+        if (typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+          return imageUrl
+        }
+        return imageUrl.startsWith('/') ? `${import.meta.env.VITE_API_BASE_URL || ''}${imageUrl}` : `${import.meta.env.VITE_API_BASE_URL || ''}/${imageUrl}`
+      }
+
+      const ordered = history
+        .flatMap(entry => [
+          {
+            id: `user-${entry.id}`,
+            role: 'user',
+            text: entry.user_query,
+            imageUrl: toImageUrl(entry.image_url),
+            created_at: entry.created_at,
+          },
+          { id: `bot-${entry.id}`, role: 'bot', text: entry.bot_response, created_at: entry.created_at },
+        ])
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+
+       setMessages(ordered)
+
+       setChatState(ordered.length ? 'response' : 'idle')
+     } catch (err) {
+       setError(err.message || 'Terjadi kesalahan saat memuat riwayat chat')
+       setChatState('error')
+     } finally {
+       setLoading(false)
+     }
+   }
 
   const handleSend = async () => {
-    if (!input.trim() && !selectedImage) return
-    const userQuery = input.trim() || 'Image query'
-    setInput('')
-    setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: userQuery, image: selectedImage }])
+    if (!input.trim()) {
+      if (imageFile) {
+        setError('Tambahkan teks sebelum mengirim gambar')
+      }
+      return
+    }
+
+    setError('')
+    setLoading(true)
     setChatState('loading')
 
-    const formData = new FormData()
-    formData.append('session_id', sessionId)
-    formData.append('user_query', userQuery)
-    if (selectedImage) {
-      formData.append('image', selectedImage)
+    const activeSessionId = sessionId || createSessionId()
+    const userMessage = {
+      id: `${activeSessionId}-user-${Date.now()}`,
+      role: 'user',
+      text: input,
+      imageUrl: imagePreviewUrl || undefined,
     }
-    setSelectedImage(null)
+    const loadingMessage = { id: `${activeSessionId}-loading`, role: 'bot', loading: true }
+
+    setMessages(prev => [...prev, userMessage, loadingMessage])
+    setSessionId(activeSessionId)
+
+    const formData = new FormData()
+    formData.append('session_id', activeSessionId)
+    formData.append('user_query', input)
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
 
     try {
-      const res = await apiFetch('/chat', {
+      const res = await apiFetch('/chat/', {
         method: 'POST',
-        body: formData
+        body: formData,
       })
-      if (res.ok) {
-        const responseData = await res.json()
-        const botResponse = responseData.data?.chat_log?.bot_response || 'No response'
-        setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', content: botResponse }])
-        setChatState('response')
-      } else {
-        setChatState('error')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.detail || 'Gagal mengirim chat ke server')
       }
-    } catch (e) {
+
+      const data = await res.json()
+      const botText = data?.data?.chat_log?.bot_response || ''
+      const loadingId = loadingMessage.id
+
+      setMessages(prev => prev.map(msg => msg.id === loadingId
+        ? { ...msg, loading: false, text: botText }
+        : msg
+      ))
+      setInput('')
+      setImageFile(null)
+      setImagePreviewUrl('')
+      setImageName('')
+      setChatState('response')
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan saat mengirim pesan')
       setChatState('error')
+      setMessages(prev => prev.filter(msg => !msg.loading))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const removeImage = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl)
+    }
+    setImageFile(null)
+    setImagePreviewUrl('')
+    setImageName('')
+  }
+
+  const handleImagePick = (event) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl)
+      }
+      setImageFile(file)
+      setImagePreviewUrl(URL.createObjectURL(file))
+      setImageName(file.name)
     }
   }
 
   const handleShortcut = (text) => {
     setInput(text)
-    handleSend()
+  }
+
+  const openImagePicker = () => {
+    fileInputRef.current?.click()
+  }
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl)
+      }
+    }
+  }, [imagePreviewUrl])
+
+  const hasBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
+
+  const renderMessages = () => {
+    if (messages.length === 0 && !loading && !error) {
+      return (
+<div className="chat-empty-state">
+           <div className="empty-main">
+             <span className="empty-robot">🤖</span>
+             <div className="empty-texts">
+               <div className="empty-greeting-small">Hi, {userName}</div>
+               <div className="empty-greeting">Butuh bantuan? Ketik<br />masalah Anda di sini</div>
+             </div>
+           </div>
+
+           <div className="chat-input-bar chat-input-bar--centered">
+             <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
+               {imagePreviewUrl && (
+                 <div className="input-top-row">
+                   <div className="image-preview-chip">
+                     <span className="image-preview-name">{imageName}</span>
+                     <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
+                   </div>
+                 </div>
+               )}
+               <div className="input-bottom-row">
+                 <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
+                 <input
+                   type="text"
+                   placeholder="Tanyakan apa saja"
+                   value={input}
+                   onChange={e => setInput(e.target.value)}
+                   onKeyDown={e => e.key === 'Enter' && handleSend()}
+                 />
+                 <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
+               </div>
+             </div>
+             <div className="chat-shortcuts">
+               {SHORTCUT_OPTIONS.map(({ label }) => (
+                 <button
+                   key={label}
+                   className="shortcut-btn"
+                   type="button"
+                   onClick={() => handleShortcut(label)}
+                 >
+                   {label}
+                 </button>
+               ))}
+             </div>
+           </div>
+         </div>
+      )
+    }
+
+    return messages.map(message => (
+      message.role === 'user' ? (
+        <div key={message.id} className="user-message-block">
+          {message.imageUrl && (
+            <div className="user-message-image-wrap">
+              <img src={message.imageUrl} alt="Preview" className="user-message-image" />
+            </div>
+          )}
+          <div className="msg user-msg">{message.text}</div>
+        </div>
+      ) : message.loading ? (
+        <div key={message.id} className="msg bot-msg loading-msg">
+          <span className="dot" /><span className="dot" /><span className="dot" />
+        </div>
+      ) : (
+        <div key={message.id} className="bot-response">
+          <p>{message.text}</p>
+        </div>
+      )
+    ))
   }
 
   return (
     <div className="chat-page">
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
       <div className="chat-messages">
-        {messages.length === 0 && chatState === 'idle' && (
-          <div className="chat-empty-state">
-            <div className="empty-main">
-              <span className="empty-robot">🤖</span>
-              <div className="empty-texts">
-                <div className="empty-greeting-small">Hi, {userName}</div>
-                <div className="empty-greeting">Butuh bantuan? Ketik<br />masalah Anda di sini</div>
-              </div>
-            </div>
+        {error && (
+          <div className="error-bubble">
+            <div className="error-title"><AlertCircle size={15} /> Terjadi Kesalahan</div>
+            <p>{error}</p>
+          </div>
+        )}
 
-            <div className="chat-input-bar chat-input-bar--centered">
-              {selectedImage && (
-                <div className="image-preview">
-                  <img src={URL.createObjectURL(selectedImage)} alt="Preview" />
-                  <button onClick={() => setSelectedImage(null)}>✕</button>
-                </div>
-              )}
-              <div className="chat-input-wrap">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleImageSelect}
-                />
-                <button className="input-img-btn" title="Upload image" onClick={handleImageClick}><Image size={16} /></button>
+        {renderMessages()}
+      </div>
+
+      {hasBotResponse && (
+        <div style={{ padding: '0 28px 18px', display: 'flex', justifyContent: 'flex-start' }}>
+          <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
+            Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
+          </button>
+        </div>
+      )}
+
+      {(chatState !== 'idle' || messages.length > 0) && (
+        <div className="chat-input-section">
+          <div className="chat-input-bar">
+            <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
+{imagePreviewUrl && (
+                 <div className="input-top-row">
+                   <div className="image-preview-chip">
+                     <span className="image-preview-name">{imageName}</span>
+                     <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
+                   </div>
+                 </div>
+               )}
+              <div className="input-bottom-row">
+                <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
                 <input
                   type="text"
                   placeholder="Tanyakan apa saja"
@@ -154,73 +308,9 @@ export default function ChatPage({ user, session }) {
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSend()}
                 />
-                <button className="send-btn" onClick={handleSend}><ArrowUp size={16} /></button>
-              </div>
-              <div className="chat-shortcuts">
-                {SHORTCUT_OPTIONS.map(({ label }) => (
-                  <button
-                    key={label}
-                    className="shortcut-btn"
-                    onClick={() => handleShortcut(label)}
-                  >
-                    {label}
-                  </button>
-                ))}
+                <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
               </div>
             </div>
-          </div>
-        )}
-
-        {messages.map(msg => (
-          <div key={msg.id} style={{ alignSelf: msg.type === 'user' ? 'flex-end' : 'flex-start' }}>
-            {msg.image && <img src={typeof msg.image === 'string' ? msg.image : URL.createObjectURL(msg.image)} alt="Uploaded" style={{ maxWidth: '200px', marginBottom: '8px', display: 'block' }} />}
-            <div className={`msg ${msg.type === 'user' ? 'user-msg' : 'bot-msg'}`}>
-              {msg.content}
-            </div>
-          </div>
-        ))}
-
-        {chatState === 'loading' && (
-          <div className="msg bot-msg loading-msg">
-            <span className="dot" /><span className="dot" /><span className="dot" />
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-
-        {chatState === 'error' && (
-          <div className="error-bubble">
-            <div className="error-title"><AlertCircle size={15} /> Error</div>
-            <p>Gagal mengirim pesan. Coba lagi.</p>
-          </div>
-        )}
-      </div>
-
-      {(messages.length > 0 || chatState !== 'idle') && (
-        <div className="chat-input-bar">
-          {selectedImage && (
-            <div className="image-preview">
-              <img src={URL.createObjectURL(selectedImage)} alt="Preview" />
-              <button onClick={() => setSelectedImage(null)}>✕</button>
-            </div>
-          )}
-          <div className="chat-input-wrap">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleImageSelect}
-            />
-            <button className="input-img-btn" title="Upload image" onClick={handleImageClick}><Image size={16} /></button>
-            <input
-              type="text"
-              placeholder="Tanyakan apa saja"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-            />
-            <button className="send-btn" onClick={handleSend}><ArrowUp size={16} /></button>
           </div>
         </div>
       )}

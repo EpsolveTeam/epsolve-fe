@@ -89,9 +89,16 @@ export default function Sidebar({ page, setPage, user, onLogout, setChatSession,
           </>
         ) : (
           <>
-            <button className={`nav-item ${page === 'chat' && !chatSession ? 'active' : ''}`} onClick={() => { setPage('chat'); setChatSession(null); }}>
+            <button
+              className={`nav-item ${page === 'chat' && !chatSession ? 'active' : ''}`}
+              onClick={() => {
+                setChatSession(null)
+                setPage('chat')
+              }}
+            >
               <ChatIcon /> <span>Obrolan Baru</span>
             </button>
+
             <button className="nav-group-btn" onClick={() => {
               if (collapsed) {
                 setCollapsed(false)
