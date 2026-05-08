@@ -1,20 +1,21 @@
 export default async function handler(req, res) {
-  const baseURL = process.env.BACKEND_URL;
-
-  const path = req.query.path
-    ? req.query.path.join("/")
-    : "";
-
-  const url = `${baseURL}/${path}`;
-
-  console.log("TARGET URL:", url);
-
   try {
+    const baseURL = process.env.BACKEND_URL;
+
+    const rawPath = req.query.path;
+
+    const path = Array.isArray(rawPath)
+      ? rawPath.join("/")
+      : rawPath || "";
+
+    const url = `${baseURL}/${path}`;
+
+    console.log("TARGET:", url);
+
     const response = await fetch(url, {
       method: req.method,
       headers: {
-        "Content-Type":
-          req.headers["content-type"] || "application/json",
+        "Content-Type": "application/json",
         Authorization: req.headers.authorization || "",
       },
       body:
@@ -26,15 +27,14 @@ export default async function handler(req, res) {
     const text = await response.text();
 
     console.log("STATUS:", response.status);
-    console.log("BODY:", text);
 
     res.status(response.status).send(text);
 
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error("FULL ERROR:", err);
 
     res.status(500).json({
-      error: error.message,
+      error: err.message,
     });
   }
 }
