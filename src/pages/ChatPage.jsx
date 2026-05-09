@@ -11,7 +11,7 @@ const createSessionId = () => {
   return `session-${Date.now()}-${Math.floor(Math.random() * 100000)}`
 }
 
-export default function ChatPage({ user, session }) {
+export default function ChatPage({ user, session, onSessionCreated }) {
   const [chatState, setChatState] = useState('idle')
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
@@ -107,6 +107,7 @@ export default function ChatPage({ user, session }) {
     setLoading(true)
     setChatState('loading')
 
+    const isNewSession = !sessionId
     const activeSessionId = sessionId || createSessionId()
 
     // reset input segera setelah submit (agar tidak menunggu respon AI)
@@ -161,6 +162,7 @@ export default function ChatPage({ user, session }) {
         : msg
       ))
       setChatState('response')
+      if (isNewSession) onSessionCreated?.()
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan saat mengirim pesan')
       setChatState('error')

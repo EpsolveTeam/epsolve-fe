@@ -157,7 +157,7 @@
 .nav-history.open {
   max-height: 9999px;
   opacity: 1;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* ── History Item Wrapper ── */

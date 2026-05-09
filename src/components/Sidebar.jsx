@@ -101,6 +101,7 @@ export default function Sidebar({
   onLogout,
   setChatSession,
   chatSession,
+  refreshKey = 0,
 }) {
   const [history, setHistory] = useState([]);
   const [histOpen, setHistOpen] = useState(true);
@@ -126,7 +127,7 @@ export default function Sidebar({
         setHistory(arr.map((s) => ({ id: s.session_id, title: s.title })));
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, refreshKey]);
 
   const adminPages = [
     { id: "dashboard", icon: <DashboardIcon />, label: "Dashboard Tiket" },
