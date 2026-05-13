@@ -12,12 +12,25 @@ import ReportPage from './pages/ReportPage'
 export default function App() {
   const [user, setUser] = useState(null)
   const [page, setPage] = useState('chat')
-  const [chatSession, setChatSession] = useState(null) // null for new, {session_id, title} for history
+  const [chatSession, setChatSession] = useState(null)
   const [initializing, setInitializing] = useState(true)
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
 
   const resetToken = new URLSearchParams(window.location.search).get('reset_token')
 
-  // Auto-login: cek token tersimpan saat pertama kali render
+  // Apply theme ke <html>
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+    } else {
+      root.classList.remove('light')
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+
   useEffect(() => {
     setUnauthorizedHandler(() => {
       localStorage.clear()
@@ -25,10 +38,7 @@ export default function App() {
     })
 
     const token = localStorage.getItem('access_token')
-    if (!token) {
-      setInitializing(false)
-      return
-    }
+    if (!token) { setInitializing(false); return }
 
     apiFetch('/auth/me')
       .then(r => r.ok ? r.json() : Promise.reject())
@@ -68,13 +78,16 @@ export default function App() {
     )
   }
 
-  if (!user) {
-    return <AuthPage onLogin={handleLogin} />
-  }
+  if (!user) return <AuthPage onLogin={handleLogin} />
 
   return (
     <div className="app">
-      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} />
+      <Sidebar
+        page={page} setPage={setPage}
+        user={user} onLogout={handleLogout}
+        setChatSession={setChatSession} chatSession={chatSession}
+        theme={theme} toggleTheme={toggleTheme}
+      />
       <div className="app-main">
         <div className="topbar">
           <h1>Epsolve Smart Helpdesk</h1>
