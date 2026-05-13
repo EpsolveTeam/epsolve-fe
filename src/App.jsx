@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Sun, Moon } from 'lucide-react'
 import './App.css'
 import { apiFetch, setUnauthorizedHandler } from './api'
 import AuthPage from './pages/AuthPage'
@@ -83,10 +84,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} theme={theme} toggleTheme={toggleTheme} />
+      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} />
       <div className="app-main">
         <div className="topbar">
-          <h1>Epsolve Smart Helpdesk</h1>
+          <h1 style={{ flex: 1 }}>Epsolve Smart Helpdesk</h1>
+          <button className="theme-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {page === 'chat' && <ChatPage user={user} session={chatSession} onSessionCreated={() => setHistoryKey(k => k + 1)} />}

@@ -214,9 +214,6 @@ export default function Sidebar({
           <div className="user-name">{user?.name || "User"}</div>
           <div className="user-email">{user?.email || ""}</div>
         </div>
-        <button className="theme-btn" onClick={toggleTheme} title={theme === "dark" ? "Light mode" : "Dark mode"}>
-          {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
         <button className="logout-btn" onClick={onLogout} title="Keluar">
           <LogOut size={14} />
         </button>
