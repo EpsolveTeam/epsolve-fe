@@ -118,7 +118,7 @@ export default function AuthPage({ onLogin }) {
             {forgotSent ? (
               <>
                 <p style={{ color: 'var(--success)', fontSize: 14, textAlign: 'center', marginBottom: 20 }}>
-                  Link reset password telah dikirim ke <strong>{form.email}</strong>.<br />
+                  Jika email terdaftar, link reset password akan dikirim ke <strong>{form.email}</strong>.<br />
                   Periksa kotak masuk atau folder spam Anda.
                 </p>
                 <button className="auth-submit" onClick={() => switchMode('login')}>

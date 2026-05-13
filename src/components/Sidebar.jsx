@@ -43,7 +43,15 @@ const ChatIcon = () => (
   </svg>
 )
 
-export default function Sidebar({ page, setPage, user, onLogout, setChatSession, chatSession, theme, toggleTheme }) {
+export default function Sidebar({
+  page,
+  setPage,
+  user,
+  onLogout,
+  setChatSession,
+  chatSession,
+  refreshKey = 0,
+}) {
   const [history, setHistory] = useState([]);
   const [histOpen, setHistOpen] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
@@ -65,7 +73,7 @@ export default function Sidebar({ page, setPage, user, onLogout, setChatSession,
         setHistory(arr.map((s) => ({ id: s.session_id, title: s.title })));
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, refreshKey]);
 
   const adminPages = [
     { id: "dashboard", icon: <DashboardIcon />, label: "Dashboard Tiket" },

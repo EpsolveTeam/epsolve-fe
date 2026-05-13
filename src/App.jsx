@@ -13,6 +13,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [page, setPage] = useState('chat')
   const [chatSession, setChatSession] = useState(null)
+  const [historyKey, setHistoryKey] = useState(0)
   const [initializing, setInitializing] = useState(true)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
 
@@ -82,18 +83,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar
-        page={page} setPage={setPage}
-        user={user} onLogout={handleLogout}
-        setChatSession={setChatSession} chatSession={chatSession}
-        theme={theme} toggleTheme={toggleTheme}
-      />
+      <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} theme={theme} toggleTheme={toggleTheme} />
       <div className="app-main">
         <div className="topbar">
           <h1>Epsolve Smart Helpdesk</h1>
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {page === 'chat' && <ChatPage user={user} session={chatSession} />}
+          {page === 'chat' && <ChatPage user={user} session={chatSession} onSessionCreated={() => setHistoryKey(k => k + 1)} />}
           {page === 'dashboard' && user.role?.toLowerCase() === 'admin' && <DashboardPage user={user} />}
           {page === 'kb' && user.role?.toLowerCase() === 'admin' && <KnowledgeBasePage />}
           {page === 'report' && user.role?.toLowerCase() === 'admin' && <ReportPage />}

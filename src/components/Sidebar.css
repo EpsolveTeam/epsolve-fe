@@ -95,7 +95,12 @@
   max-height: 0; opacity: 0; overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
-.nav-history.open { max-height: 9999px; opacity: 1; overflow-y: auto; }
+
+.nav-history.open {
+  max-height: 9999px;
+  opacity: 1;
+  overflow: visible;
+}
 
 .nav-history-item-wrapper {
   position: relative;
