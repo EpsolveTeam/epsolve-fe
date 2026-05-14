@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Sun, Moon } from 'lucide-react'
 import './App.css'
 import { apiFetch, setUnauthorizedHandler } from './api'
 import AuthPage from './pages/AuthPage'
@@ -15,10 +16,23 @@ export default function App() {
   const [chatSession, setChatSession] = useState(null)
   const [historyKey, setHistoryKey] = useState(0)
   const [initializing, setInitializing] = useState(true)
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
 
   const resetToken = new URLSearchParams(window.location.search).get('reset_token')
 
-  // Auto-login: cek token tersimpan saat pertama kali render
+  // Apply theme ke <html>
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+    } else {
+      root.classList.remove('light')
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+
   useEffect(() => {
     setUnauthorizedHandler(() => {
       localStorage.clear()
@@ -26,10 +40,7 @@ export default function App() {
     })
 
     const token = localStorage.getItem('access_token')
-    if (!token) {
-      setInitializing(false)
-      return
-    }
+    if (!token) { setInitializing(false); return }
 
     apiFetch('/auth/me')
       .then(r => r.ok ? r.json() : Promise.reject())
@@ -69,16 +80,17 @@ export default function App() {
     )
   }
 
-  if (!user) {
-    return <AuthPage onLogin={handleLogin} />
-  }
+  if (!user) return <AuthPage onLogin={handleLogin} />
 
   return (
     <div className="app">
       <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} />
       <div className="app-main">
         <div className="topbar">
-          <h1>Epsolve Smart Helpdesk</h1>
+          <h1 style={{ flex: 1 }}>Epsolve Smart Helpdesk</h1>
+          <button className="theme-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {page === 'chat' && <ChatPage user={user} session={chatSession} onSessionCreated={() => setHistoryKey(k => k + 1)} />}

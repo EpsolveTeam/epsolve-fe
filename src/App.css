@@ -25,6 +25,26 @@
   font-weight: 500;
 }
 
+.theme-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  cursor: pointer;
+}
+
+.theme-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
 .ticket-modal-divider {
   height: 1px;
   background: var(--border);
