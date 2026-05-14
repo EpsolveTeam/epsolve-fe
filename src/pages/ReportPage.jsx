@@ -180,10 +180,10 @@ export default function ReportPage() {
             <>
               <StatCard
                 label="Total Pertanyaan yang Masuk"
-                value={tm ? tm.total_questions?.toLocaleString('id-ID') : '—'}
-                delta={tm?.questions_trend?.value !== undefined ? `${Math.abs(tm.questions_trend.value)}%` : '—'}
-                deltaDir={tm?.questions_trend?.direction ?? 'down'}
-                note={tm?.questions_trend?.text ?? ''}
+                value={cm ? cm.total_sessions?.toLocaleString('id-ID') : '—'}
+                delta={cm?.sessions_trend?.value !== undefined ? `${Math.abs(cm.sessions_trend.value)}%` : '—'}
+                deltaDir={cm?.sessions_trend?.direction ?? 'down'}
+                note={cm?.sessions_trend?.text ?? ''}
               />
               <StatCard
                 label="Total Interaksi Chatbot"
