@@ -22,14 +22,20 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   const [imageFile, setImageFile] = useState(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
   const [imageName, setImageName] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [categoryWarning, setCategoryWarning] = useState(false)
   const fileInputRef = useRef(null)
   const userName = user?.name || 'User'
 
-  const SHORTCUT_OPTIONS = [
-    { label: 'Produksi & Operasional' },
-    { label: 'Troubleshooting Perangkat' },
-    { label: 'Sistem & IT Support' },
-    { label: 'Maintenance & Setup' },
+  const CATEGORY_OPTIONS = [
+    'Produksi & Operasi',
+    'Troubleshooting Perangkat',
+    'Sistem & IT Support',
+    'Maintenance & Setup',
+    'Service Repair',
+    'Kebijakan Internal',
+    'Penggunaan Tools',
+    'General',
   ]
 
   useEffect(() => {
@@ -37,6 +43,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
       if (session.session_id !== sessionId) {
         setSessionId(session.session_id)
       }
+      setSelectedCategory(null)
       loadChatHistory(session.session_id)
       return
     }
@@ -44,6 +51,8 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     setSessionId(null)
     setMessages([])
     setChatState('idle')
+    setSelectedCategory(null)
+    setCategoryWarning(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
@@ -103,11 +112,17 @@ export default function ChatPage({ user, session, onSessionCreated }) {
       return
     }
 
+    const isNewSession = !sessionId
+
+    if (isNewSession && !selectedCategory) {
+      setCategoryWarning(true)
+      return
+    }
+
+    setCategoryWarning(false)
     setError('')
     setLoading(true)
     setChatState('loading')
-
-    const isNewSession = !sessionId
     const activeSessionId = sessionId || createSessionId()
 
     // reset input segera setelah submit (agar tidak menunggu respon AI)
@@ -138,7 +153,10 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
     const formData = new FormData()
     formData.append('session_id', activeSessionId)
-    formData.append('user_query', input)
+    formData.append('user_query', capturedInput)
+    if (selectedCategory) {
+      formData.append('category', selectedCategory)
+    }
     if (imageFile) {
       formData.append('image', imageFile)
     }
@@ -193,8 +211,9 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     }
   }
 
-  const handleShortcut = (text) => {
-    setInput(text)
+  const handleCategorySelect = (cat) => {
+    setSelectedCategory(cat)
+    setCategoryWarning(false)
   }
 
   const openImagePicker = () => {
@@ -216,51 +235,58 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   const renderMessages = () => {
     if (messages.length === 0 && !loading && !error) {
       return (
-<div className="chat-empty-state">
-           <div className="empty-main">
-             <span className="empty-robot">🤖</span>
-             <div className="empty-texts">
-               <div className="empty-greeting-small">Hi, {userName}</div>
-               <div className="empty-greeting">Butuh bantuan? Ketik<br />masalah Anda di sini</div>
-             </div>
-           </div>
+        <div className="chat-empty-state">
+          <div className="empty-main">
+            <span className="empty-robot">🤖</span>
+            <div className="empty-texts">
+              <div className="empty-greeting-small">Hi, {userName}</div>
+              <div className="empty-greeting">Halo! Apa yang bisa<br />dibantu hari ini?</div>
+            </div>
+          </div>
 
-           <div className="chat-input-bar chat-input-bar--centered">
-             <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
-               {imagePreviewUrl && (
-                 <div className="input-top-row">
-                   <div className="image-preview-chip">
-                     <span className="image-preview-name">{imageName}</span>
-                     <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
-                   </div>
-                 </div>
-               )}
-               <div className="input-bottom-row">
-                 <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
-                 <input
-                   type="text"
-                   placeholder="Tanyakan apa saja"
-                   value={input}
-                   onChange={e => setInput(e.target.value)}
-                   onKeyDown={e => e.key === 'Enter' && handleSend()}
-                 />
-                 <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
-               </div>
-             </div>
-             <div className="chat-shortcuts">
-               {SHORTCUT_OPTIONS.map(({ label }) => (
-                 <button
-                   key={label}
-                   className="shortcut-btn"
-                   type="button"
-                   onClick={() => handleShortcut(label)}
-                 >
-                   {label}
-                 </button>
-               ))}
-             </div>
-           </div>
-         </div>
+          <div className="category-section">
+            <p className="category-prompt">Pilih kategori masalah Anda:</p>
+            <div className="category-grid">
+              {CATEGORY_OPTIONS.map((cat) => (
+                <button
+                  key={cat}
+                  className={`category-btn${selectedCategory === cat ? ' active' : ''}`}
+                  type="button"
+                  onClick={() => handleCategorySelect(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="chat-input-bar chat-input-bar--centered">
+            <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
+              {imagePreviewUrl && (
+                <div className="input-top-row">
+                  <div className="image-preview-chip">
+                    <span className="image-preview-name">{imageName}</span>
+                    <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
+                  </div>
+                </div>
+              )}
+              <div className="input-bottom-row">
+                <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
+                <input
+                  type="text"
+                  placeholder={selectedCategory ? 'Tanyakan apa saja' : 'Pilih kategori terlebih dahulu...'}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                />
+                <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
+              </div>
+            </div>
+            {categoryWarning && (
+              <p className="category-warning">Pilih kategori masalah terlebih dahulu</p>
+            )}
+          </div>
+        </div>
       )
     }
 

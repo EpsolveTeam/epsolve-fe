@@ -40,6 +40,17 @@
   margin-bottom: 28px;
 }
 
+.categories-grid-header {
+  grid-column: 1 / -1;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
 .category-row {
   display: flex;
   justify-content: space-between;

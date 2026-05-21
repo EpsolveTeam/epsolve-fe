@@ -121,6 +121,7 @@ export default function DashboardPage({ user }) {
   const [filterDivisi, setFilterDivisi] = useState([]);
   const [filterStatus, setFilterStatus] = useState([]);
   const [filterTiket, setFilterTiket] = useState([]);
+  const [chatCategoryCounts, setChatCategoryCounts] = useState({});
   const rowsPerPage = 10;
 
   const fetchTickets = () => {
@@ -132,14 +133,17 @@ export default function DashboardPage({ user }) {
       .finally(() => setLoading(false));
   };
 
+  const fetchChatCategoryStats = () => {
+    apiFetch("/chat/category-stats")
+      .then((r) => r.json())
+      .then((data) => setChatCategoryCounts(data && typeof data === "object" ? data : {}))
+      .catch(() => setChatCategoryCounts({}));
+  };
+
   useEffect(() => {
     fetchTickets();
+    fetchChatCategoryStats();
   }, []);
-
-  const categoryCounts = tickets.reduce((acc, t) => {
-    acc[t.category] = (acc[t.category] || 0) + 1;
-    return acc;
-  }, {});
 
   const filteredTickets = tickets.filter((t) => {
     if (filterDivisi.length && !filterDivisi.includes(t.division)) return false;
@@ -176,10 +180,11 @@ export default function DashboardPage({ user }) {
       </div>
 
       <div className="categories-grid">
+        <div className="categories-grid-header">Frekuensi Chatbot per Kategori</div>
         {QUESTION_TYPES.map((label) => (
           <div key={label} className="category-row">
             <span>{label}</span>
-            <span className="category-count">{categoryCounts[label] || 0}</span>
+            <span className="category-count">{chatCategoryCounts[label] || 0}</span>
           </div>
         ))}
       </div>

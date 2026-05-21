@@ -253,18 +253,30 @@
 }
 .send-btn:hover { background: var(--accent-hover); }
 
-/* ── Shortcuts ── */
-.chat-shortcuts {
+/* ── Category Selection ── */
+.category-section {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 860px;
 }
 
-.shortcut-btn {
+.category-prompt {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.category-grid {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.category-btn {
   padding: 10px 20px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
@@ -277,11 +289,25 @@
   white-space: nowrap;
 }
 
-.shortcut-btn:hover {
+.category-btn:hover {
   background: var(--bg-hover);
   border-color: var(--border);
   color: var(--text-primary);
   transform: translateY(-1px);
+}
+
+.category-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.category-warning {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--error);
+  text-align: center;
 }
 .image-preview-chip {
   display: inline-flex;
