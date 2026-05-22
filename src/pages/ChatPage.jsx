@@ -240,8 +240,37 @@ export default function ChatPage({ user, session, onSessionCreated }) {
             <span className="empty-robot">🤖</span>
             <div className="empty-texts">
               <div className="empty-greeting-small">Hi, {userName}</div>
-              <div className="empty-greeting">Halo! Apa yang bisa<br />dibantu hari ini?</div>
+              <div className="empty-greeting">Butuh bantuan? Ketik masalah Anda di sini</div>
             </div>
+          </div>
+
+          <div className="chat-input-bar chat-input-bar--centered">
+            <div className="chat-input-bar-row">
+              <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
+                {imagePreviewUrl && (
+                  <div className="input-top-row">
+                    <div className="image-preview-chip">
+                      <span className="image-preview-name">{imageName}</span>
+                      <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
+                    </div>
+                  </div>
+                )}
+                <div className="input-bottom-row">
+                  <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
+                  <input
+                    type="text"
+                    placeholder={selectedCategory ? 'Tanyakan apa saja' : 'Pilih kategori terlebih dahulu...'}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  />
+                </div>
+              </div>
+              <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
+            </div>
+            {categoryWarning && (
+              <p className="category-warning">Pilih kategori masalah terlebih dahulu</p>
+            )}
           </div>
 
           <div className="category-section">
@@ -258,33 +287,6 @@ export default function ChatPage({ user, session, onSessionCreated }) {
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="chat-input-bar chat-input-bar--centered">
-            <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
-              {imagePreviewUrl && (
-                <div className="input-top-row">
-                  <div className="image-preview-chip">
-                    <span className="image-preview-name">{imageName}</span>
-                    <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
-                  </div>
-                </div>
-              )}
-              <div className="input-bottom-row">
-                <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
-                <input
-                  type="text"
-                  placeholder={selectedCategory ? 'Tanyakan apa saja' : 'Pilih kategori terlebih dahulu...'}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
-                />
-                <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
-              </div>
-            </div>
-            {categoryWarning && (
-              <p className="category-warning">Pilih kategori masalah terlebih dahulu</p>
-            )}
           </div>
         </div>
       )
@@ -337,7 +339,8 @@ export default function ChatPage({ user, session, onSessionCreated }) {
       {(chatState !== 'idle' || messages.length > 0) && (
         <div className="chat-input-section">
           <div className="chat-input-bar">
-            <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
+            <div className="chat-input-bar-row">
+              <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
 {imagePreviewUrl && (
                  <div className="input-top-row">
                    <div className="image-preview-chip">
@@ -355,8 +358,9 @@ export default function ChatPage({ user, session, onSessionCreated }) {
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSend()}
                 />
-                <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
               </div>
+            </div>
+              <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
             </div>
           </div>
         </div>
