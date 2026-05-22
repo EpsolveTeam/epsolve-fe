@@ -113,6 +113,9 @@
 .nav-history-item-wrapper:hover { background: var(--bg-hover); }
 .nav-history-item-wrapper:has(.nav-history-item.active) { background: #000000; }
 .nav-history-item-wrapper:has(.nav-history-item.active) .nav-history-item { color: #ffffff; }
+.nav-history-item-wrapper:has(.nav-history-item.active) .nav-history-menu-btn { color: #ffffff; opacity: 1; }
+.nav-history-item-wrapper:has(.nav-history-item.active):hover .nav-history-menu-btn:hover,
+.nav-history-item-wrapper:has(.nav-history-item.active) .nav-history-menu-btn.open { opacity: 1; color: #ffffff; background: rgba(255,255,255,0.15); }
 
 .nav-history-item {
   flex: 1; min-width: 0;

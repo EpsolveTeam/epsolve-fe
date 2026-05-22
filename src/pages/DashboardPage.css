@@ -243,6 +243,12 @@
   background: var(--success-dim);
   color: var(--success);
   border: 1px solid rgba(34,197,94,0.3);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.status-badge.answered:hover {
+  background: rgba(34,197,94,0.2);
+  border-color: var(--success);
 }
 
 .icon-btn {

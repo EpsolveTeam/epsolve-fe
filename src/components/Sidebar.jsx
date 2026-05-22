@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   MoreHorizontal,
   ChevronDown,
@@ -193,8 +194,8 @@ export default function Sidebar({
         )}
       </nav>
 
-      {/* Dropdown fixed — keluar dari sidebar */}
-      {openMenuId && (
+      {/* Dropdown via portal ke document.body agar tidak terpotong sidebar */}
+      {openMenuId && createPortal(
         <div
           className="nav-history-dropdown"
           style={{ top: dropdownPos.top, left: dropdownPos.left }}
@@ -205,7 +206,8 @@ export default function Sidebar({
           >
             Hapus
           </button>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="sidebar-footer">

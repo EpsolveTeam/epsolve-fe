@@ -25,6 +25,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [categoryWarning, setCategoryWarning] = useState(false)
   const fileInputRef = useRef(null)
+  const messagesEndRef = useRef(null)
   const userName = user?.name || 'User'
 
   const CATEGORY_OPTIONS = [
@@ -56,20 +57,19 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
-  const loadChatHistory = async (id) => { 
-     setError('')
-     setChatState('loading')
-     setLoading(true)
+  const loadChatHistory = async (id) => {
+    setError('')
+    setChatState('loading')
+    setLoading(true)
 
-     try {
-       const res = await apiFetch(`/chat/history/${encodeURIComponent(id)}`)
-       if (!res.ok) {
-         throw new Error('Gagal memuat riwayat chat')
-       }
-       const history = await res.json()
+    try {
+      const res = await apiFetch(`/chat/history/${encodeURIComponent(id)}`)
+      if (!res.ok) {
+        throw new Error('Gagal memuat riwayat chat')
+      }
+      const history = await res.json()
       const toImageUrl = (imageUrl) => {
         if (!imageUrl) return undefined
-        // kalau backend hanya simpan path relatif, pastikan jadi URL absolut
         if (typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
           return imageUrl
         }
@@ -78,7 +78,6 @@ export default function ChatPage({ user, session, onSessionCreated }) {
           : `${import.meta.env.VITE_API_BASE_URL || ''}/${imageUrl}`
       }
 
-
       const ordered = history
         .flatMap(entry => [
           {
@@ -86,23 +85,21 @@ export default function ChatPage({ user, session, onSessionCreated }) {
             role: 'user',
             text: entry.user_query,
             imageUrl: toImageUrl(entry.image_query_url || entry.image_url),
-
             created_at: entry.created_at,
           },
           { id: `bot-${entry.id}`, role: 'bot', text: entry.bot_response, created_at: entry.created_at },
         ])
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
-       setMessages(ordered)
-
-       setChatState(ordered.length ? 'response' : 'idle')
-     } catch (err) {
-       setError(err.message || 'Terjadi kesalahan saat memuat riwayat chat')
-       setChatState('error')
-     } finally {
-       setLoading(false)
-     }
-   }
+      setMessages(ordered)
+      setChatState(ordered.length ? 'response' : 'idle')
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan saat memuat riwayat chat')
+      setChatState('error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSend = async () => {
     if (!input.trim()) {
@@ -125,16 +122,11 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     setChatState('loading')
     const activeSessionId = sessionId || createSessionId()
 
-    // reset input segera setelah submit (agar tidak menunggu respon AI)
-    // untuk image preview, jangan langsung revoke saat message belum dirender
     const capturedInput = input
     const capturedImagePreviewUrl = imagePreviewUrl
     const capturedImageName = imageName
 
     setInput('')
-
-    // reset UI image setelah user message masuk ke list
-    // (jadi preview yang sudah tertangkap tetap bisa ditampilkan)
     setImageFile(null)
     setImagePreviewUrl('')
     setImageName('')
@@ -146,7 +138,8 @@ export default function ChatPage({ user, session, onSessionCreated }) {
       imageUrl: capturedImagePreviewUrl || undefined,
     }
 
-    const loadingMessage = { id: `${activeSessionId}-loading`, role: 'bot', loading: true }
+    const loadingId = `${activeSessionId}-loading-${Date.now()}`
+    const loadingMessage = { id: loadingId, role: 'bot', loading: true }
 
     setMessages(prev => [...prev, userMessage, loadingMessage])
     setSessionId(activeSessionId)
@@ -173,7 +166,6 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
       const data = await res.json()
       const botText = data?.data?.chat_log?.bot_response || ''
-      const loadingId = loadingMessage.id
 
       setMessages(prev => prev.map(msg => msg.id === loadingId
         ? { ...msg, loading: false, text: botText }
@@ -220,17 +212,24 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     fileInputRef.current?.click()
   }
 
-   useEffect(() => {
-     return () => {
-       if (imagePreviewUrl) {
-         URL.revokeObjectURL(imagePreviewUrl)
-       }
-     }
-   }, [])
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl)
+      }
+    }
+  }, [])
 
-   const hasCompletedBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
-   const hasLoadingMessage = messages.some(msg => msg.loading)
-   const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage
+  useEffect(() => {
+    const el = messagesEndRef.current
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [messages])
+
+  const hasCompletedBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
+  const hasLoadingMessage = messages.some(msg => msg.loading)
+  const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage
 
   const renderMessages = () => {
     if (messages.length === 0 && !loading && !error) {
@@ -317,38 +316,43 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   return (
     <div className="chat-page">
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
-      <div className="chat-messages">
-        {error && (
-          <div className="error-bubble">
-            <div className="error-title"><AlertCircle size={15} /> Terjadi Kesalahan</div>
-            <p>{error}</p>
-          </div>
+      <div className="chat-messages" ref={messagesEndRef}>
+        {messages.length > 0 || loading || error ? (
+          <>
+            <div className="chat-messages-spacer" />
+            <div className="chat-messages-inner">
+              {renderMessages()}
+              {error && (
+                <div className="error-bubble">
+                  <div className="error-title"><AlertCircle size={15} /> Terjadi Kesalahan</div>
+                  <p>{error}</p>
+                </div>
+              )}
+              {showEscalateButton && (
+                <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
+                  Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          renderMessages()
         )}
-
-        {renderMessages()}
       </div>
 
-       {showEscalateButton && (
-         <div style={{ padding: '0 28px 18px', display: 'flex', justifyContent: 'flex-start' }}>
-           <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
-             Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
-           </button>
-         </div>
-       )}
-
       {(chatState !== 'idle' || messages.length > 0) && (
-        <div className="chat-input-section">
-          <div className="chat-input-bar">
-            <div className="chat-input-bar-row">
-              <div className={`chat-input-wrap ${imagePreviewUrl ? 'has-image' : ''}`}>
-{imagePreviewUrl && (
-                 <div className="input-top-row">
-                   <div className="image-preview-chip">
-                     <span className="image-preview-name">{imageName}</span>
-                     <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
-                   </div>
-                 </div>
-               )}
+        <div className="chat-input-section chat-input-section--session">
+          <div className="chat-input-bar-row">
+            {/* ↓ tambah class --floating agar tanpa background container */}
+            <div className={`chat-input-wrap chat-input-wrap--floating ${imagePreviewUrl ? 'has-image' : ''}`}>
+              {imagePreviewUrl && (
+                <div className="input-top-row">
+                  <div className="image-preview-chip">
+                    <span className="image-preview-name">{imageName}</span>
+                    <button type="button" className="image-remove-btn" onClick={removeImage}>×</button>
+                  </div>
+                </div>
+              )}
               <div className="input-bottom-row">
                 <button className="input-img-btn" type="button" title="Upload image" onClick={openImagePicker}><Image size={16} /></button>
                 <input
@@ -360,8 +364,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
                 />
               </div>
             </div>
-              <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
-            </div>
+            <button className="send-btn" type="button" onClick={handleSend}><ArrowUp size={16} /></button>
           </div>
         </div>
       )}

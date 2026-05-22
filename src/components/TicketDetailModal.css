@@ -61,6 +61,7 @@
   white-space: pre-line;
   max-height: 340px;
   overflow-y: auto;
+  margin-bottom: 10px;
 }
 
 .reply-textarea {

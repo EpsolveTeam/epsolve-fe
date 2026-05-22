@@ -239,9 +239,13 @@ export default function DashboardPage({ user }) {
                   <div className="dash-nama muted">{t.name}</div>
                   <div className="dash-status">
                     {t.status !== "open" ? (
-                      <span className="status-badge answered">
+                      <button
+                        className="status-badge answered"
+                        onClick={() => setSelectedTicket(t)}
+                        title="Lihat jawaban"
+                      >
                         <Check size={12} /> Terjawab
-                      </span>
+                      </button>
                     ) : (
                       <button
                         className="status-badge respon"
