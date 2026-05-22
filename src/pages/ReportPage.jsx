@@ -278,7 +278,7 @@ export default function ReportPage() {
           <SortDropdown sortBy={sortBy} onChange={setSortBy} />
         </div>
 
-        <div className="table-wrap">
+        <div className="table-wrap question-table-wrap">
           <table className="data-table">
             <thead>
               <tr>
@@ -309,16 +309,16 @@ export default function ReportPage() {
               )}
             </tbody>
           </table>
-          <div className="table-footer">
-            <span className="muted">Rows per page</span>
-            <select className="rows-select"><option>10</option><option>25</option></select>
-            <span className="muted">Page {page} of {totalPages}</span>
-            <div className="page-btns">
-              <button onClick={() => setPage(1)}>«</button>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))}>›</button>
-              <button onClick={() => setPage(totalPages)}>»</button>
-            </div>
+        </div>
+        <div className="table-footer question-table-footer">
+          <span className="muted">Rows per page</span>
+          <select className="rows-select"><option>10</option><option>25</option></select>
+          <span className="muted">Page {page} of {totalPages}</span>
+          <div className="page-btns">
+            <button onClick={() => setPage(1)}>«</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))}>›</button>
+            <button onClick={() => setPage(totalPages)}>»</button>
           </div>
         </div>
       </section>

@@ -287,3 +287,59 @@
 .sort-dropdown-item.selected .sort-arrows-icon {
   color: var(--accent);
 }
+
+/* Question table - border only, no background */
+.question-table-wrap {
+  background: transparent !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.question-table-wrap thead {
+  background: var(--bg-elevated);
+}
+
+.question-table-wrap thead th {
+  color: #ffffff;
+}
+
+.question-table-wrap tbody {
+  background: transparent;
+}
+
+.question-table-wrap .data-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.1s;
+}
+
+.question-table-wrap .data-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.question-table-wrap .data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.question-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: none;
+  background: transparent;
+}
+
+.question-table-footer .rows-select {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.question-table-footer .page-btns button {
+  background: transparent;
+  border: 1px solid var(--border);
+}
