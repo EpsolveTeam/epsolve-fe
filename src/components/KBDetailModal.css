@@ -32,15 +32,15 @@
   line-height: 1.5;
   resize: vertical;
   background: var(--bg-elevated);
-  color: white;
+  color: var(--text-primary);
 }
 
 .btn-danger {
-  background: #FF6467;
+  background: var(--error);
 }
 
 .btn-danger:hover {
-  background: #FF6467; /* or darker shade */
+  background: #dc2626;
 }
 
 .btn-cancel {

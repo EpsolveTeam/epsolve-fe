@@ -93,14 +93,14 @@
 .btn-danger {
   display: flex; align-items: center; gap: 6px;
   padding: 9px 18px;
-  background: #7f1d1d;
+  background: var(--error);
   border: none;
   border-radius: var(--radius-md);
-  color: #fca5a5;
+  color: white;
   font-size: 13.5px;
   font-weight: 500;
 }
-.btn-danger:hover { background: #991b1b; }
+.btn-danger:hover { background: #dc2626; }
 
 .btn-edit {
   display: flex; align-items: center; gap: 6px;

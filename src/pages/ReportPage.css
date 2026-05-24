@@ -110,10 +110,10 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-elevated);
   color: var(--text-primary);
-  padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 2px 8px;
+  border: 1px solid var(--border);
   border-radius: 9px;
 }
 
@@ -301,7 +301,7 @@
 }
 
 .question-table-wrap thead th {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .question-table-wrap tbody {

@@ -127,17 +127,17 @@
   max-width: 780px;
   font-size: 13.5px;
   line-height: 1.7;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .bot-response h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .bot-response p {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .escalate-btn {

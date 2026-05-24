@@ -63,13 +63,17 @@ const StatCard = ({ label, value, delta, deltaDir, note }) => {
 
   const deltaClass = deltaDir === 'up' ? 'delta-up' : deltaDir === 'down' ? 'delta-down' : 'delta-flat'
 
+  const deltaDisplay = delta && delta !== '—'
+    ? `${deltaDir === 'up' ? '+' : deltaDir === 'down' ? '-' : ''}${delta}`
+    : delta
+
   return (
     <div className="stat-card">
       <div className="stat-top">
         <span className="stat-label">{label}</span>
         <span className={`stat-trend ${deltaClass}`}>
           {trendIcon}
-          {delta}
+          {deltaDisplay}
         </span>
       </div>
       <div className="stat-value">{value}</div>
