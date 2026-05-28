@@ -46,12 +46,12 @@ function SelectDropdown({ label, options, selected, onChange }) {
   )
 }
 
-export default function TicketFormModal({ onClose, user }) {
+export default function TicketFormModal({ onClose, user, sessionId, initialQuery, initialCategory }) {
   const [form, setForm] = useState({
     name: user?.name || '',
     user_email: user?.email || '',
-    description: '',
-    category: '',
+    description: initialQuery || '',
+    category: initialCategory || '',
     division: '',
     image: null,
   })
@@ -66,6 +66,16 @@ export default function TicketFormModal({ onClose, user }) {
       .then(data => setOptions(data))
       .catch(() => {})
   }, [])
+
+  // Pre-select initialCategory if it matches an available option
+  useEffect(() => {
+    if (initialCategory && options.categories?.length) {
+      const match = options.categories.find(c => c === initialCategory || c.toLowerCase() === initialCategory.toLowerCase())
+      if (match) {
+        setForm(f => ({ ...f, category: match }))
+      }
+    }
+  }, [initialCategory, options.categories])
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
@@ -92,6 +102,7 @@ export default function TicketFormModal({ onClose, user }) {
       fd.append('description', form.description)
       fd.append('category', form.category)
       fd.append('division', form.division)
+      if (sessionId) fd.append('session_id', sessionId)
       if (form.image) fd.append('image', form.image)
 
       const res = await apiFetch('/tickets/', { method: 'POST', body: fd })

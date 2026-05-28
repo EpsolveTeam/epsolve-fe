@@ -23,6 +23,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
   const [imageName, setImageName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [lastBotMeta, setLastBotMeta] = useState({ no_answer: false, ticket_flag: false })
   const [categoryWarning, setCategoryWarning] = useState(false)
   const fileInputRef = useRef(null)
   const messagesEndRef = useRef(null)
@@ -87,7 +88,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
             imageUrl: toImageUrl(entry.image_query_url || entry.image_url),
             created_at: entry.created_at,
           },
-          { id: `bot-${entry.id}`, role: 'bot', text: entry.bot_response, created_at: entry.created_at },
+          { id: `bot-${entry.id}`, role: 'bot', text: (entry.bot_response || '').replace(/CREATE_SUPPORT_TICKET_FLAG\s*/gi, '').trim(), created_at: entry.created_at },
         ])
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
@@ -165,7 +166,21 @@ export default function ChatPage({ user, session, onSessionCreated }) {
       }
 
       const data = await res.json()
-      const botText = data?.data?.chat_log?.bot_response || ''
+      // Remove internal flag markers from bot response text before displaying
+      let botText = (data?.data?.chat_log?.bot_response || '')
+        .replace(/CREATE_SUPPORT_TICKET_FLAG\s*/gi, '')
+        .trim()
+
+      // Extract no_answer and ticket_flag booleans from backend response
+      const noAnswer = data?.data?.no_answer === true
+      const ticketFlag = data?.data?.ticket_flag === true
+      setLastBotMeta({
+        no_answer: noAnswer,
+        ticket_flag: ticketFlag,
+        user_query: capturedInput,
+        category: selectedCategory,
+        image_query_url: data?.data?.chat_log?.image_query_url || null,
+      })
 
       setMessages(prev => prev.map(msg => msg.id === loadingId
         ? { ...msg, loading: false, text: botText }
@@ -229,7 +244,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
   const hasCompletedBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
   const hasLoadingMessage = messages.some(msg => msg.loading)
-  const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage
+  const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage && lastBotMeta.no_answer
 
   const renderMessages = () => {
     if (messages.length === 0 && !loading && !error) {
@@ -329,9 +344,14 @@ export default function ChatPage({ user, session, onSessionCreated }) {
                 </div>
               )}
               {showEscalateButton && (
-                <button className="escalate-btn" type="button" onClick={() => setShowTicketForm(true)}>
-                  Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
-                </button>
+                <>
+                  <div className="no-answer-banner">
+                    Jawaban tidak ditemukan di Knowledge Base. Mohon hubungi support.
+                  </div>
+                  <button className="escalate-btn escalate-btn--active" type="button" onClick={() => setShowTicketForm(true)}>
+                    Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
+                  </button>
+                </>
               )}
             </div>
           </>
@@ -369,7 +389,15 @@ export default function ChatPage({ user, session, onSessionCreated }) {
         </div>
       )}
 
-      {showTicketForm && <TicketFormModal onClose={() => setShowTicketForm(false)} user={user} />}
+      {showTicketForm && (
+        <TicketFormModal
+          onClose={() => setShowTicketForm(false)}
+          user={user}
+          sessionId={sessionId}
+          initialQuery={lastBotMeta.user_query}
+          initialCategory={lastBotMeta.category}
+        />
+      )}
     </div>
   )
 }

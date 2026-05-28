@@ -140,6 +140,15 @@
   color: var(--text-primary);
 }
 
+.no-answer-banner {
+  align-self: flex-start;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warning-text);
+  opacity: 0.85;
+}
+
 .escalate-btn {
   align-self: flex-start;
   margin-top: 4px;
@@ -153,8 +162,19 @@
   color: var(--text-primary);
   font-size: 13px;
   transition: all 0.12s;
+  cursor: pointer;
 }
 .escalate-btn:hover { background: var(--bg-elevated); }
+.escalate-btn--active {
+  background: var(--accent-dim, rgba(59, 130, 246, 0.1));
+  border-color: var(--accent, #3b82f6);
+  color: var(--accent, #3b82f6);
+  font-weight: 500;
+}
+.escalate-btn--active:hover {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+}
 
 .error-bubble {
   align-self: flex-start;
