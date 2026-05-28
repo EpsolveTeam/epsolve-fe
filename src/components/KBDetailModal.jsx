@@ -9,6 +9,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   useEffect(() => {
     async function fetchDetail() {
@@ -41,8 +42,12 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
     }
   }
 
-  async function handleDelete() {
-    if (!confirm('Apakah Anda yakin ingin menghapus knowledge base ini?')) return
+  async function handleDeleteConfirm() {
+    setDeleteConfirmOpen(true)
+  }
+
+  async function handleDeleteExecute() {
+    setDeleteConfirmOpen(false)
     try {
       await deleteKnowledgeBase(item.id)
       onDelete && onDelete(item.id)
@@ -114,7 +119,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
             </>
           ) : (
             <>
-              <button className="btn-danger" onClick={handleDelete}>
+              <button className="btn-danger" onClick={handleDeleteConfirm}>
                 <svg width="13" height="15" viewBox="0 0 13 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M0.5 3.16667H12.5M11.1667 3.16667V12.5C11.1667 13.1667 10.5 13.8333 9.83333 13.8333H3.16667C2.5 13.8333 1.83333 13.1667 1.83333 12.5V3.16667M3.83333 3.16667V1.83333C3.83333 1.16667 4.5 0.5 5.16667 0.5H7.83333C8.5 0.5 9.16667 1.16667 9.16667 1.83333V3.16667" stroke="#FAFAFA" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -129,6 +134,26 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
             </>
           )}
         </div>
+
+        {deleteConfirmOpen && (
+          <div className="overlay" onClick={() => setDeleteConfirmOpen(false)}>
+            <div className="modal confirm-modal" onClick={e => e.stopPropagation()}>
+              <h3 className="confirm-title">Hapus Knowledge Base</h3>
+              <p className="confirm-text">
+                Apakah Anda yakin ingin menghapus ini?<br/>
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+              <div className="confirm-actions">
+                <button className="btn-cancel" onClick={() => setDeleteConfirmOpen(false)}>
+                  <span style={{color: 'white'}}>Batal</span>
+                </button>
+                <button className="btn-danger" onClick={handleDeleteExecute}>
+                  <span style={{color: 'white'}}>Hapus</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

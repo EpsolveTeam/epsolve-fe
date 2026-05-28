@@ -74,3 +74,28 @@
   white-space: pre-wrap;
   line-height: 1.6;
 }
+
+.confirm-modal {
+  max-width: 400px;
+  text-align: center;
+  padding: 24px 28px;
+}
+
+.confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.confirm-text {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
