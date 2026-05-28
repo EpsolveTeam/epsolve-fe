@@ -15,6 +15,12 @@ function formatDate(dateStr) {
   return `${day} ${month} ${year}`
 }
 
+function extractQuestion(content) {
+  if (!content) return ''
+  const match = content.match(/\*\*Keluhan Pelanggan:\*\*\s*\n(.+?)(?:\n|$)/)
+  return match ? match[1].trim() : content
+}
+
 function SelectDropdown({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false)
   const [dropdownStyle, setDropdownStyle] = useState({})
@@ -328,7 +334,7 @@ export default function KnowledgeBasePage() {
                         <div className="kb-date">{formatDate(item.updated_at)}</div>
                         <div className="kb-info">
                           <span className="kb-type">{item.category}</span>
-                          <p className="kb-q">{item.title}</p>
+                          <p className="kb-q">{extractQuestion(item.content)}</p>
                         </div>
                         <div className="kb-division">
                           <span className="division-badge">{item.division}</span>

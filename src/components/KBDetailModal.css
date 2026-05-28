@@ -65,3 +65,12 @@
 .btn-save:hover {
   background: var(--accent-hover);
 }
+
+.answer-box strong {
+  font-weight: 700;
+}
+
+.answer-box {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}

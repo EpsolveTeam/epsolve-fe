@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { getKnowledgeBaseDetail, updateKnowledgeBase, deleteKnowledgeBase } from '../api'
 import './KBDetailModal.css'
@@ -66,6 +66,16 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
     )
   }
 
+  function extractAnswer(text) {
+    const match = text.match(/\*\*Solusi Helpdesk:\*\*\s*\n(.+)/s)
+    return match ? match[1].trim() : text
+  }
+
+  function extractQuestion(text) {
+    const match = text.match(/\*\*Keluhan Pelanggan:\*\*\s*\n(.+?)(?:\n|$)/)
+    return match ? match[1].trim() : text
+  }
+
   if (!fullItem) return null
   return (
     <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -74,8 +84,8 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
 
         <div className="kb-modal-header">
           <div>
-            <h2>{fullItem.category}</h2>
-            <p className="kb-modal-q">{fullItem.title}</p>
+            <h2>{extractQuestion(fullItem.content)}</h2>
+            <p className="kb-modal-q">{fullItem.category}</p>
           </div>
           <span className="ticket-tag">{fullItem.division}</span>
         </div>
@@ -83,7 +93,6 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
         <div className="ticket-modal-divider" />
 
         <div className="field-label">Terakhir diperbarui: {new Date(fullItem.updated_at).toLocaleDateString('id-ID')}</div>
-        <div className="field-label" style={{marginTop:14}}>Jawaban</div>
         {editing ? (
           <textarea
             className="answer-edit"
@@ -92,7 +101,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
             rows={10}
           />
         ) : (
-          <div className="answer-box">{fullItem.content}</div>
+          <div className="answer-box">{extractAnswer(fullItem.content)}</div>
         )}
 
         <div className="modal-actions" style={{marginTop:16}}>
