@@ -211,6 +211,11 @@ export default function KnowledgeBasePage() {
       const category = filterJenis.length ? filterJenis.join(',') : null
       const division = filterDivisi.length ? filterDivisi.join(',') : null
       const data = await getKnowledgeBase(category, division)
+      console.log('KB API Response:', data)
+      if (data && data.length > 0) {
+        console.log('First item keys:', Object.keys(data[0]))
+        console.log('First item:', JSON.stringify(data[0], null, 2))
+      }
       setKbData(data)
       setTotalItems(data.length)
     } catch (error) {
@@ -334,7 +339,7 @@ export default function KnowledgeBasePage() {
                         <div className="kb-date">{formatDate(item.updated_at)}</div>
                         <div className="kb-info">
                           <span className="kb-type">{item.category}</span>
-                          <p className="kb-q">{extractQuestion(item.content)}</p>
+                          <p className="kb-q">{item.title || item.question || extractQuestion(item.content)}</p>
                         </div>
                         <div className="kb-division">
                           <span className="division-badge">{item.division}</span>

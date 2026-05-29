@@ -89,7 +89,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
 
         <div className="kb-modal-header">
           <div>
-            <h2>{extractQuestion(fullItem.content)}</h2>
+            <h2>{fullItem.title || extractQuestion(fullItem.content)}</h2>
             <p className="kb-modal-q">{fullItem.category}</p>
           </div>
           <span className="ticket-tag">{fullItem.division}</span>
