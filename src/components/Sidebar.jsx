@@ -211,7 +211,9 @@ export default function Sidebar({
       )}
 
       <div className="sidebar-footer">
-        <div className="user-avatar">{user?.name?.[0]?.toUpperCase() || "U"}</div>
+        <div className="user-avatar">
+          <img src="/profile_img.png" alt="Profile" className="user-avatar-img" />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="user-name">{user?.name || "User"}</div>
           <div className="user-email">{user?.email || ""}</div>

@@ -246,6 +246,14 @@ export default function ChatPage({ user, session, onSessionCreated }) {
   const hasLoadingMessage = messages.some(msg => msg.loading)
   const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage && lastBotMeta.no_answer
 
+  const renderTextWithLinks = (text) => {
+    if (!text) return { cleanText: '', urls: [] }
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const urls = text.match(urlRegex) || []
+    const cleanText = urls.reduce((t, url) => t.replace(url, '').trim(), text)
+    return { cleanText, urls }
+  }
+
   const renderMessages = () => {
     if (messages.length === 0 && !loading && !error) {
       return (
@@ -320,11 +328,30 @@ export default function ChatPage({ user, session, onSessionCreated }) {
         <div key={message.id} className="msg bot-msg loading-msg">
           <span className="dot" /><span className="dot" /><span className="dot" />
         </div>
-      ) : (
-        <div key={message.id} className="bot-response">
-          <p>{message.text}</p>
-        </div>
-      )
+      ) : (() => {
+        const { cleanText, urls } = renderTextWithLinks(message.text)
+        return (
+          <div key={message.id} className="bot-response">
+            {cleanText && <p>{cleanText}</p>}
+            {urls.length > 0 && (
+              <div className="chat-link-section">
+                {urls.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="chat-link"
+                  >
+                    <span className="chat-link-text">{url}</span>
+                    <ExternalLink size={13} className="chat-link-icon" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()
     ))
   }
 
@@ -343,10 +370,10 @@ export default function ChatPage({ user, session, onSessionCreated }) {
                   <p>{error}</p>
                 </div>
               )}
-              {showEscalateButton && (
+               {showEscalateButton && (
                 <>
                   <div className="no-answer-banner">
-                    Jawaban tidak ditemukan di Knowledge Base. Mohon hubungi support.
+                    <em>Maaf, belum ditemukan jawaban yang tepat untuk pertanyaan Anda. Silakan ajukan pertanyaan Anda langsung ke tim Customer Support kami untuk ditindaklanjuti.</em>
                   </div>
                   <button className="escalate-btn escalate-btn--active" type="button" onClick={() => setShowTicketForm(true)}>
                     Ajukan Pertanyaan ke Customer Support <ExternalLink size={13} />
