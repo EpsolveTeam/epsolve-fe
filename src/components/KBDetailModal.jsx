@@ -145,10 +145,10 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
               </p>
               <div className="confirm-actions">
                 <button className="btn-cancel" onClick={() => setDeleteConfirmOpen(false)}>
-                  <span style={{color: 'white'}}>Batal</span>
+                  <span>Batal</span>
                 </button>
                 <button className="btn-danger" onClick={handleDeleteExecute}>
-                  <span style={{color: 'white'}}>Hapus</span>
+                  <span>Hapus</span>
                 </button>
               </div>
             </div>
