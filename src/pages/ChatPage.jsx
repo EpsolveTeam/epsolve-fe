@@ -46,6 +46,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
         setSessionId(session.session_id)
       }
       setSelectedCategory(null)
+      setLastBotMeta({ no_answer: false, ticket_flag: false })
       loadChatHistory(session.session_id)
       return
     }
@@ -55,6 +56,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     setChatState('idle')
     setSelectedCategory(null)
     setCategoryWarning(false)
+    setLastBotMeta({ no_answer: false, ticket_flag: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
@@ -94,6 +96,19 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
       setMessages(ordered)
       setChatState(ordered.length ? 'response' : 'idle')
+
+      if (history.length > 0) {
+        const lastEntry = history[history.length - 1]
+        setLastBotMeta({
+          no_answer: lastEntry.no_answer === true,
+          ticket_flag: lastEntry.ticket_flag === true,
+          user_query: lastEntry.user_query || '',
+          category: lastEntry.category || null,
+          image_query_url: lastEntry.image_query_url || null,
+        })
+      } else {
+        setLastBotMeta({ no_answer: false, ticket_flag: false })
+      }
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan saat memuat riwayat chat')
       setChatState('error')
@@ -244,6 +259,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
   const hasCompletedBotResponse = messages.some(msg => msg.role === 'bot' && !msg.loading)
   const hasLoadingMessage = messages.some(msg => msg.loading)
+
   const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage && lastBotMeta.no_answer
 
   const renderTextWithLinks = (text) => {
