@@ -211,11 +211,6 @@ export default function KnowledgeBasePage() {
       const category = filterJenis.length ? filterJenis.join(',') : null
       const division = filterDivisi.length ? filterDivisi.join(',') : null
       const data = await getKnowledgeBase(category, division)
-      console.log('KB API Response:', data)
-      if (data && data.length > 0) {
-        console.log('First item keys:', Object.keys(data[0]))
-        console.log('First item:', JSON.stringify(data[0], null, 2))
-      }
       setKbData(data)
       setTotalItems(data.length)
     } catch (error) {
@@ -264,12 +259,12 @@ export default function KnowledgeBasePage() {
     }
   }
 
-  async function handleDelete(kbId) {
+  async function handleDelete(faqId) {
     if (!confirm('Apakah Anda yakin ingin menghapus knowledge base ini?')) return
     try {
-      await deleteKnowledgeBase(kbId)
-      setKbData(prev => prev.filter(item => item.id !== kbId))
-      if (selectedKB && selectedKB.id === kbId) setSelectedKB(null)
+      await deleteKnowledgeBase(faqId)
+      setKbData(prev => prev.filter(item => item.faq_id !== faqId))
+      if (selectedKB && selectedKB.faq_id === faqId) setSelectedKB(null)
     } catch (error) {
       console.error('Failed to delete KB:', error)
       alert('Gagal menghapus knowledge base')
@@ -426,8 +421,8 @@ export default function KnowledgeBasePage() {
         <KBDetailModal
           item={selectedKB}
           onClose={() => setSelectedKB(null)}
-          onUpdate={(updated) => setKbData(prev => prev.map(item => item.id === updated.id ? updated : item))}
-          onDelete={(id) => { setKbData(prev => prev.filter(item => item.id !== id)); setSelectedKB(null) }}
+          onUpdate={(updated) => setKbData(prev => prev.map(item => item.faq_id === updated.faq_id ? updated : item))}
+          onDelete={(faqId) => { setKbData(prev => prev.filter(item => item.faq_id !== faqId)); setSelectedKB(null) }}
         />
       )}
     </div>

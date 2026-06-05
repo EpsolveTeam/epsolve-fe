@@ -67,8 +67,8 @@ export async function getKnowledgeBase(category = null, division = null) {
   return res.json()
 }
 
-export async function getKnowledgeBaseDetail(kbId) {
-  const res = await apiFetch(`/knowledge/${kbId}`)
+export async function getKnowledgeBaseDetail(faqId) {
+  const res = await apiFetch(`/knowledge/by-faq/${faqId}`)
   if (!res.ok) throw new Error('Failed to fetch knowledge base detail')
   return res.json()
 }
@@ -82,8 +82,8 @@ export async function createKnowledgeBase(data) {
   return res.json()
 }
 
-export async function updateKnowledgeBase(kbId, data) {
-  const res = await apiFetch(`/knowledge/${kbId}`, {
+export async function updateKnowledgeBase(faqId, data) {
+  const res = await apiFetch(`/knowledge/by-faq/${faqId}`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -91,8 +91,8 @@ export async function updateKnowledgeBase(kbId, data) {
   return res.json()
 }
 
-export async function deleteKnowledgeBase(kbId) {
-  const res = await apiFetch(`/knowledge/${kbId}`, {
+export async function deleteKnowledgeBase(faqId) {
+  const res = await apiFetch(`/knowledge/by-faq/${faqId}`, {
     method: 'DELETE'
   })
   if (!res.ok) throw new Error('Failed to delete knowledge base')

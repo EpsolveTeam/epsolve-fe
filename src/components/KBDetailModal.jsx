@@ -15,7 +15,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
     async function fetchDetail() {
       setLoading(true)
       try {
-        const detail = await getKnowledgeBaseDetail(item.id)
+        const detail = await getKnowledgeBaseDetail(item.faq_id)
         setFullItem(detail)
         setEditContent(detail.content)
       } catch (error) {
@@ -30,7 +30,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
   async function handleSave() {
     setSaving(true)
     try {
-      const updated = await updateKnowledgeBase(item.id, { content: editContent })
+      const updated = await updateKnowledgeBase(item.faq_id, { content: editContent })
       setFullItem(updated)
       setEditing(false)
       onUpdate && onUpdate(updated)
@@ -49,8 +49,8 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
   async function handleDeleteExecute() {
     setDeleteConfirmOpen(false)
     try {
-      await deleteKnowledgeBase(item.id)
-      onDelete && onDelete(item.id)
+      await deleteKnowledgeBase(item.faq_id)
+      onDelete && onDelete(item.faq_id)
       onClose()
     } catch (error) {
       console.error('Failed to delete:', error)
