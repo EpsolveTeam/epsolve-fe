@@ -46,10 +46,10 @@ export default function ChatPage({ user, session, onSessionCreated }) {
     if (session?.session_id) {
       if (session.session_id !== sessionId) {
         setSessionId(session.session_id)
+        setSelectedCategory(null)
+        setLastBotMeta({ no_answer: false, ticket_flag: false })
+        loadChatHistory(session.session_id)
       }
-      setSelectedCategory(null)
-      setLastBotMeta({ no_answer: false, ticket_flag: false })
-      loadChatHistory(session.session_id)
       return
     }
 
@@ -204,7 +204,7 @@ export default function ChatPage({ user, session, onSessionCreated }) {
         : msg
       ))
       setChatState('response')
-      if (isNewSession) onSessionCreated?.()
+      if (isNewSession) onSessionCreated?.({ session_id: activeSessionId, title: capturedInput })
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan saat mengirim pesan')
       setChatState('error')

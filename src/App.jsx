@@ -58,6 +58,13 @@ export default function App() {
     setPage(userData.role?.toLowerCase() === 'admin' ? 'dashboard' : 'chat')
   }
 
+  const handleSessionCreated = (sessionData) => {
+    if (sessionData) {
+      setChatSession({ session_id: sessionData.session_id, title: sessionData.title })
+    }
+    setHistoryKey(k => k + 1)
+  }
+
   const handleLogout = async () => {
     await apiFetch('/auth/logout', { method: 'POST' })
     localStorage.removeItem('access_token')
@@ -96,7 +103,7 @@ export default function App() {
           </button>
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {page === 'chat' && <ChatPage user={user} session={chatSession} onSessionCreated={() => setHistoryKey(k => k + 1)} />}
+          {page === 'chat' && <ChatPage user={user} session={chatSession} onSessionCreated={handleSessionCreated} />}
           {page === 'dashboard' && user.role?.toLowerCase() === 'admin' && <DashboardPage user={user} />}
           {page === 'kb' && user.role?.toLowerCase() === 'admin' && <KnowledgeBasePage />}
           {page === 'report' && user.role?.toLowerCase() === 'admin' && <ReportPage />}
