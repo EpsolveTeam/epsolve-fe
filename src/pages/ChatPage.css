@@ -130,14 +130,121 @@
   color: var(--text-primary);
 }
 
-.bot-response h3 {
-  font-size: 14px;
+.bot-response h1,
+.bot-response h2,
+.bot-response h3,
+.bot-response h4,
+.bot-response h5,
+.bot-response h6 {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 12px 0 6px;
+  line-height: 1.4;
+}
+
+.bot-response h1 { font-size: 17px; }
+.bot-response h2 { font-size: 16px; }
+.bot-response h3 { font-size: 15px; }
+.bot-response h4 { font-size: 14px; }
+.bot-response h5 { font-size: 13.5px; }
+.bot-response h6 { font-size: 13px; }
+
+.bot-response p {
+  color: var(--text-primary);
+  margin: 6px 0;
+}
+
+.bot-response p:first-child {
+  margin-top: 0;
+}
+
+.bot-response p:last-child {
+  margin-bottom: 0;
+}
+
+.bot-response strong,
+.bot-response b {
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.bot-response p {
+.bot-response em,
+.bot-response i {
+  font-style: italic;
+}
+
+.bot-response ol,
+.bot-response ul {
+  margin: 6px 0;
+  padding-left: 24px;
   color: var(--text-primary);
+}
+
+.bot-response li {
+  margin: 3px 0;
+  line-height: 1.7;
+}
+
+.bot-response code {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12.5px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: var(--text-primary);
+}
+
+.bot-response pre {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.bot-response pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.bot-response blockquote {
+  border-left: 3px solid var(--border);
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.bot-response hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 14px 0;
+}
+
+.bot-response table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 12.5px;
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.bot-response th,
+.bot-response td {
+  border: 1px solid var(--border-subtle);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.bot-response th {
+  background: var(--bg-elevated);
+  font-weight: 600;
 }
 
 .chat-link-section {

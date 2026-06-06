@@ -1,4 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Image, ArrowUp, ExternalLink, AlertCircle } from 'lucide-react'
 import { apiFetch } from '../api'
 import TicketFormModal from '../components/TicketFormModal'
@@ -262,12 +264,23 @@ export default function ChatPage({ user, session, onSessionCreated }) {
 
   const showEscalateButton = hasCompletedBotResponse && !hasLoadingMessage && lastBotMeta.no_answer
 
-  const renderTextWithLinks = (text) => {
-    if (!text) return { cleanText: '', urls: [] }
-    const urlRegex = /(https?:\/\/[^\s]+)/g
-    const urls = text.match(urlRegex) || []
-    const cleanText = urls.reduce((t, url) => t.replace(url, '').trim(), text)
-    return { cleanText, urls }
+  const renderMarkdown = (text) => {
+    if (!text) return null
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="chat-link">
+              {children}
+              <ExternalLink size={13} className="chat-link-icon" />
+            </a>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    )
   }
 
   const renderMessages = () => {
@@ -344,30 +357,11 @@ export default function ChatPage({ user, session, onSessionCreated }) {
         <div key={message.id} className="msg bot-msg loading-msg">
           <span className="dot" /><span className="dot" /><span className="dot" />
         </div>
-      ) : (() => {
-        const { cleanText, urls } = renderTextWithLinks(message.text)
-        return (
-          <div key={message.id} className="bot-response">
-            {cleanText && <p>{cleanText}</p>}
-            {urls.length > 0 && (
-              <div className="chat-link-section">
-                {urls.map((url, i) => (
-                  <a
-                    key={i}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="chat-link"
-                  >
-                    <span className="chat-link-text">{url}</span>
-                    <ExternalLink size={13} className="chat-link-icon" />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })()
+      ) : (
+        <div key={message.id} className="bot-response">
+          {renderMarkdown(message.text)}
+        </div>
+      )
     ))
   }
 
