@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Download, Loader2, CheckCircle } from 'lucide-react'
 import { apiFetch } from '../api'
+import { useToast } from './Toast'
 import './ShareModal.css'
 
 const PERIOD_OPTIONS = [
@@ -30,6 +31,7 @@ export default function ShareModal({
   const [loadingSettings, setLoadingSettings] = useState(true)
   const [saveError, setSaveError] = useState('')
   const [fileSize, setFileSize] = useState('')
+  const toast = useToast()
 
   useEffect(() => {
     apiFetch('/analytics/report-settings')
@@ -55,7 +57,7 @@ export default function ShareModal({
       const res = await apiFetch(`/analytics/export-pdf?period=${apiPeriod}`)
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.detail || 'Gagal mengunduh laporan')
+        toast.error(err.detail || 'Gagal mengunduh laporan')
         return
       }
 
@@ -78,7 +80,7 @@ export default function ShareModal({
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      alert('Gagal mengunduh laporan')
+      toast.error('Gagal mengunduh laporan')
     } finally {
       setDownloading(false)
     }

@@ -5,6 +5,7 @@ import { apiFetch, setUnauthorizedHandler } from './api'
 import AuthPage from './pages/AuthPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import Sidebar from './components/Sidebar'
+import { ToastProvider } from './components/Toast'
 import ChatPage from './pages/ChatPage'
 import DashboardPage from './pages/DashboardPage'
 import KnowledgeBasePage from './pages/KnowledgeBasePage'
@@ -90,6 +91,7 @@ export default function App() {
   if (!user) return <AuthPage onLogin={handleLogin} />
 
   return (
+    <ToastProvider>
     <div className="app">
       <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} />
       <div className="app-main">
@@ -110,5 +112,6 @@ export default function App() {
         </div>
       </div>
     </div>
+    </ToastProvider>
   )
 }

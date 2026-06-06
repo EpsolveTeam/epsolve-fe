@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { ChevronDown, ArrowUpRight, RotateCcw, Loader2 } from 'lucide-react'
 import KBDetailModal from '../components/KBDetailModal'
+import { useToast } from '../components/Toast'
 import { getKnowledgeBase, createKnowledgeBase, deleteKnowledgeBase, getOptions } from '../api'
 import './KnowledgeBasePage.css'
 
@@ -190,6 +191,7 @@ export default function KnowledgeBasePage() {
   const [formCategory, setFormCategory] = useState('')
   const [formDivision, setFormDivision] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const toast = useToast()
 
   const fetchOptions = useCallback(async () => {
     try {
@@ -233,7 +235,7 @@ export default function KnowledgeBasePage() {
 
   async function handleCreate() {
     if (!formTitle || !formContent || !formCategory || !formDivision) {
-      alert('Semua field harus diisi')
+      toast.warning('Semua field harus diisi')
       return
     }
     setSubmitting(true)
@@ -250,10 +252,10 @@ export default function KnowledgeBasePage() {
       setFormContent('')
       setFormCategory('')
       setFormDivision('')
-      alert('Knowledge base berhasil ditambahkan')
+      toast.success('Knowledge base berhasil ditambahkan')
     } catch (error) {
       console.error('Failed to create KB:', error)
-      alert('Gagal menambahkan knowledge base')
+      toast.error('Gagal menambahkan knowledge base')
     } finally {
       setSubmitting(false)
     }
@@ -267,7 +269,7 @@ export default function KnowledgeBasePage() {
       if (selectedKB && selectedKB.faq_id === faqId) setSelectedKB(null)
     } catch (error) {
       console.error('Failed to delete KB:', error)
-      alert('Gagal menghapus knowledge base')
+      toast.error('Gagal menghapus knowledge base')
     }
   }
 

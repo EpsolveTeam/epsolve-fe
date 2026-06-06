@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { getKnowledgeBaseDetail, updateKnowledgeBase, deleteKnowledgeBase } from '../api'
+import { useToast } from './Toast'
 import './KBDetailModal.css'
 
 export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
@@ -10,6 +11,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
   const [editContent, setEditContent] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     async function fetchDetail() {
@@ -36,7 +38,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
       onUpdate && onUpdate(updated)
     } catch (error) {
       console.error('Failed to update:', error)
-      alert('Gagal memperbarui knowledge base')
+      toast.error('Gagal memperbarui knowledge base')
     } finally {
       setSaving(false)
     }
@@ -54,7 +56,7 @@ export default function KBDetailModal({ item, onClose, onUpdate, onDelete }) {
       onClose()
     } catch (error) {
       console.error('Failed to delete:', error)
-      alert('Gagal menghapus knowledge base')
+      toast.error('Gagal menghapus knowledge base')
     }
   }
 
