@@ -112,6 +112,10 @@ export default function AuthPage({ onLogin }) {
     return (
       <div className="auth-bg">
         <div className="auth-center">
+          <div className="auth-logo-wrap">
+            <img src="/logo_dark.png" alt="Epsolve" className="auth-logo auth-logo--dark" />
+            <img src="/logo_light.png" alt="Epsolve" className="auth-logo auth-logo--light" />
+          </div>
           <h1 className="auth-title">Lupa Password</h1>
           <p className="auth-sub">Masukkan email Anda dan kami akan mengirim link untuk reset password.</p>
           <div className="auth-card">
@@ -155,6 +159,10 @@ export default function AuthPage({ onLogin }) {
   return (
     <div className="auth-bg">
       <div className="auth-center">
+        <div className="auth-logo-wrap">
+          <img src="/logo_dark.png" alt="Epsolve" className="auth-logo auth-logo--dark" />
+          <img src="/logo_light.png" alt="Epsolve" className="auth-logo auth-logo--light" />
+        </div>
         <h1 className="auth-title">{mode === 'login' ? 'Masuk' : 'Daftar'}</h1>
         <p className="auth-sub">Selamat datang! Silakan masuk untuk mendapat pengalaman lebih personal!</p>
 

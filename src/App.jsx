@@ -16,17 +16,17 @@ export default function App() {
   const [chatSession, setChatSession] = useState(null)
   const [historyKey, setHistoryKey] = useState(0)
   const [initializing, setInitializing] = useState(true)
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
 
   const resetToken = new URLSearchParams(window.location.search).get('reset_token')
 
   // Apply theme ke <html>
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'light') {
-      root.classList.add('light')
+    if (theme === 'dark') {
+      root.classList.add('dark')
     } else {
-      root.classList.remove('light')
+      root.classList.remove('dark')
     }
     localStorage.setItem('theme', theme)
   }, [theme])
@@ -87,7 +87,10 @@ export default function App() {
       <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} setChatSession={setChatSession} chatSession={chatSession} refreshKey={historyKey} />
       <div className="app-main">
         <div className="topbar">
-          <h1 style={{ flex: 1 }}>Epsolve Smart Helpdesk</h1>
+          <div style={{ flex: 1 }}>
+            <img src="/logo_light.png" alt="Epsolve" className="topbar-logo topbar-logo--light" />
+            <img src="/logo_dark.png" alt="Epsolve" className="topbar-logo topbar-logo--dark" />
+          </div>
           <button className="theme-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>

@@ -20,9 +20,23 @@
   flex-shrink: 0;
 }
 
-.topbar h1 {
-  font-size: 15px;
-  font-weight: 500;
+.topbar-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* light mode (default): tampilkan logo_light */
+.topbar-logo--dark {
+  display: none;
+}
+
+/* dark mode: tampilkan logo_dark */
+:root.dark .topbar-logo--light {
+  display: none;
+}
+:root.dark .topbar-logo--dark {
+  display: inline;
 }
 
 .theme-btn {
